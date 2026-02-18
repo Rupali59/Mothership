@@ -1,0 +1,81 @@
+# Go workspace
+!go.work
+go.work.sum
+
+# Independent Service Repositories (Polyrepo)
+services/chaukidar/
+services/cloud-adapter/
+services/health/
+services/marketing/
+services/scheduler/
+services/storage/
+services/inventory-management/
+services/entitlement/
+apps/core-frontend/
+plugins/email/
+plugins/sms/
+plugins/telegram/
+plugins/whatsapp/
+plugins/inventory/
+plugins/orders/
+plugins/razorpay/
+plugins/stripe/
+
+# Binaries and compiled files
+server
+motherboard-server
+rishta-mb
+port-registry
+*.exe
+*.test
+*.prof
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Dependencies
+**/node_modules/
+**/vendor/
+**/venv/
+**/.venv/
+
+# Build artifacts
+**/dist/
+**/.next/
+**/build/
+**/out/
+**/tmp/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+**/.logs/
+
+# Independent Service Repositories (Polyrepo)
+services/chaukidar/
+services/cloud-adapter/
+services/health/
+services/marketing/
+services/scheduler/
+services/storage/
+services/inventory-management/
+services/entitlement/
+apps/core-frontend/
+env.d/

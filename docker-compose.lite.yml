@@ -1,0 +1,41 @@
+version: '3.8'
+
+# Lite Mode: Minimal local development stack for client developers
+# Usage: docker-compose -f docker-compose.lite.yml up
+# This runs only the core gateway + database, mocking all plugins.
+
+services:
+  # 1. Minimal Database
+  mongodb:
+    image: mongo:7.0
+    ports: ["27017:27017"]
+    volumes:
+      - mongodb_lite_data:/data/db
+      - ./tests/fixtures/seed:/docker-entrypoint-initdb.d
+    environment:
+      - MONGO_INITDB_DATABASE=motherboard
+
+  # 2. Cache
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  # 3. Core Gateway (Lite Mode)
+  backend:
+    build:
+      context: ./apps/core-server
+    ports: ["8080:8080"]
+    environment:
+      - MB_MODE=lite
+      - MONGODB_URI=mongodb://mongodb:27017/motherboard
+      - REDIS_URL=redis://redis:6379
+      - ENABLE_MOCK_PLUGINS=true
+      - JWT_SECRET=${JWT_SECRET}
+      - ENVIRONMENT=development
+      - PORT=8080
+    depends_on:
+      - mongodb
+      - redis
+
+volumes:
+  mongodb_lite_data:

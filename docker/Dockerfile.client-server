@@ -1,0 +1,19 @@
+# Shared Dockerfile for Client Servers (Node.js / Express)
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Expose port (default 3001, but docker-compose overrides)
+EXPOSE 3001
+
+# Start command
+CMD ["npm", "start"]

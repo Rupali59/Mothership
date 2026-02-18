@@ -1,0 +1,991 @@
+services:
+  # --------------------------------------------------------------------------
+  # Infrastructure
+  # --------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: motherboard-redis
+    networks:
+      - motherboard-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  minio:
+    image: minio/minio:latest
+    container_name: motherboard-minio
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    networks:
+      - motherboard-network
+
+  mongodb:
+    image: mongo:7.0
+    container_name: motherboard-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: motherboard
+    networks:
+      - motherboard-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/motherboard --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # --------------------------------------------------------------------------
+  # Core Platform
+  # --------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: apps/core-server/Dockerfile
+    container_name: motherboard-backend
+    environment:
+      - PORT=8080
+      - APP_ENV=${APP_ENV:-development}
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=motherboard
+      - EMAIL_PLUGIN_URL=http://email:8081
+      - SMS_PLUGIN_URL=http://sms:8082
+      - WHATSAPP_PLUGIN_URL=http://whatsapp:8083
+      - TELEGRAM_PLUGIN_URL=http://telegram:8084
+      - BILLING_SERVICE_URL=http://billing:8090
+      - HEALTH_SERVICE_URL=http://health:8091
+      - ENTITLEMENT_SERVICE_URL=http://entitlement:8085
+      - JHORA_SERVICE_URL=http://jhora:3130
+      - VEDIKA_SERVICE_URL=http://vedika:3140
+      - MARKETING_SERVICE_URL=http://marketing:8092
+      - CLOUD_ADAPTER_URL=http://cloud-adapter:8093
+      - NOTIFICATION_SERVICE_URL=http://notification:8094
+      - STORAGE_SERVICE_URL=http://storage:8098
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    env_file:
+      - ./apps/core-server/.env.local
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8080/readyz" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./apps/admin-dashboard
+      dockerfile: Dockerfile
+    container_name: motherboard-frontend
+    environment:
+      - PORT=3000
+      - NEXT_PUBLIC_API_URL=${BACKEND_URL:-http://localhost:8080}
+      - NEXTAUTH_URL=${FRONTEND_URL:-http://localhost:3000}
+      - NODE_ENV=${NODE_ENV:-development}
+    env_file:
+      - ./apps/admin-dashboard/.env.local
+    depends_on:
+      - backend
+    networks:
+      - motherboard-network
+    stdin_open: true
+    tty: true
+
+  chaukidar:
+    build:
+      context: ./services/chaukidar
+      dockerfile: Dockerfile
+    container_name: motherboard-chaukidar
+    volumes:
+      # Mount the entire GitHub folder to /monitored_root
+      - ${HOME}/Documents/GitHub:/monitored_root:ro
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - WATCH_DIRECTORY=/monitored_root
+      - POLL_INTERVAL=2s
+    networks:
+      - motherboard-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: always
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: services/scheduler/Dockerfile
+    container_name: motherboard-scheduler
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=motherboard
+      - REDIS_URL=redis://redis:6379
+      - TASK_TRACKER_INTERNAL_URL=http://task-tracker:8095
+      - HEALTH_SERVICE_URL=http://health:8091
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    env_file:
+      - ./services/scheduler/.env.local
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Microservices
+  # --------------------------------------------------------------------------
+  entitlement:
+    build:
+      context: ./services/entitlement
+      dockerfile: Dockerfile
+    container_name: motherboard-entitlement
+    environment:
+      - PORT=8085
+      - APP_ENV=${APP_ENV:-development}
+      - MONGO_URI=mongodb://mongodb:27017/motherboard
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8085/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  billing:
+    build:
+      context: ./services/billing
+      dockerfile: Dockerfile
+    container_name: motherboard-billing
+    environment:
+      - PORT=8090
+      - APP_ENV=${APP_ENV:-development}
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DB_NAME=billing
+      - RAZORPAY_PLUGIN_URL=http://razorpay:8086
+      - STRIPE_PLUGIN_URL=http://stripe:8087
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    env_file:
+      - ./services/billing/.env.local
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8090/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  health:
+    build:
+      context: ./services/health
+      dockerfile: Dockerfile
+    container_name: motherboard-health
+    environment:
+      - PORT=8091
+      - APP_ENV=${APP_ENV:-development}
+      - BACKEND_URL=http://backend:8080
+      - SCHEDULER_URL=http://scheduler:8080
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    env_file:
+      - ./services/health/.env.local
+    networks:
+      - motherboard-network
+
+  marketing:
+    build:
+      context: ./services/marketing
+      dockerfile: Dockerfile
+    container_name: motherboard-marketing
+    environment:
+      - PORT=8092
+      - APP_ENV=${APP_ENV:-development}
+    env_file:
+      - ./services/marketing/.env.local
+    networks:
+      - motherboard-network
+
+  cloud-adapter:
+    build:
+      context: ./services/cloud-adapter
+      dockerfile: Dockerfile
+    container_name: motherboard-cloud-adapter
+    environment:
+      - PORT=8093
+      - APP_ENV=${APP_ENV:-development}
+    env_file:
+      - ./services/cloud-adapter/.env.local
+    networks:
+      - motherboard-network
+
+  notification:
+    build:
+      context: ./services/notification
+      dockerfile: Dockerfile
+    container_name: motherboard-notification
+    environment:
+      - PORT=8094
+      - APP_ENV=${APP_ENV:-development}
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=motherboard
+      - EMAIL_PLUGIN_URL=http://email:8081
+      - SMS_PLUGIN_URL=http://sms:8082
+      - WHATSAPP_PLUGIN_URL=http://whatsapp:8083
+      - TELEGRAM_PLUGIN_URL=http://telegram:8084
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    env_file:
+      - ./services/notification/.env.local
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8094/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  storage:
+    build:
+      context: ./services/storage
+      dockerfile: Dockerfile
+    container_name: motherboard-storage
+    environment:
+      - PORT=8098
+      - APP_ENV=${APP_ENV:-development}
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=motherboard
+      - S3_ENDPOINT=http://minio:9000
+      - S3_BUCKET=motherboard-assets
+      - S3_REGION=us-east-1
+      - S3_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - S3_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - S3_USE_PATH_STYLE=true
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8098/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  inventory:
+    build:
+      context: ./plugins/inventory
+      dockerfile: Dockerfile
+    container_name: motherboard-inventory
+    environment:
+      - PORT=8096
+      - APP_ENV=${APP_ENV:-development}
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=motherboard-inventory
+    env_file:
+      - ./services/inventory-management/.env.local
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8096/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  orders:
+    build:
+      context: ./plugins/orders
+      dockerfile: Dockerfile
+    container_name: motherboard-orders
+    environment:
+      - PORT=8097
+      - APP_ENV=${APP_ENV:-development}
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=motherboard-orders
+      - INVENTORY_SERVICE_URL=http://inventory:8096
+    env_file:
+      - ./services/order-management/.env.local
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      inventory:
+        condition: service_healthy
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8097/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # --------------------------------------------------------------------------
+  # Plugins
+  # --------------------------------------------------------------------------
+  email:
+    build:
+      context: ./plugins/email
+      dockerfile: Dockerfile
+    container_name: motherboard-email
+    environment:
+      - PORT=8081
+      - APP_ENV=${APP_ENV:-development}
+    env_file:
+      - ./plugins/email/.env.local
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  sms:
+    build:
+      context: ./plugins/sms
+      dockerfile: Dockerfile
+    container_name: motherboard-sms
+    environment:
+      - PORT=8082
+      - APP_ENV=${APP_ENV:-development}
+    env_file:
+      - ./plugins/sms/.env.local
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  whatsapp:
+    build:
+      context: ./plugins/whatsapp
+      dockerfile: Dockerfile
+    container_name: motherboard-whatsapp
+    environment:
+      - PORT=8083
+      - APP_ENV=${APP_ENV:-development}
+    env_file:
+      - ./plugins/whatsapp/.env.local
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8083/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  telegram:
+    build:
+      context: ./plugins/telegram
+      dockerfile: Dockerfile
+    container_name: motherboard-telegram
+    environment:
+      - PORT=8084
+      - APP_ENV=${APP_ENV:-development}
+    env_file:
+      - ./plugins/telegram/.env.local
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8084/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  razorpay:
+    build:
+      context: ./plugins/razorpay
+      dockerfile: Dockerfile
+    container_name: motherboard-razorpay
+    environment:
+      - PORT=8086
+      - APP_ENV=${APP_ENV:-development}
+    env_file:
+      - ./plugins/razorpay/.env.local
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8086/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  stripe:
+    build:
+      context: ./plugins/stripe
+      dockerfile: Dockerfile
+    container_name: motherboard-stripe
+    environment:
+      - PORT=8087
+      - APP_ENV=${APP_ENV:-development}
+    env_file:
+      - ./plugins/stripe/.env.local
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8087/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  jhora:
+    build:
+      context: ./plugins/jhora
+      dockerfile: Dockerfile
+    container_name: motherboard-jhora
+    environment:
+      - PORT=3130
+      - APP_ENV=${APP_ENV:-development}
+      - MONGODB_URI=mongodb://mongodb:27017/motherboard
+      - REDIS_URL=redis://redis:6379
+      - JHORA_API_URL=${JHORA_API_URL:-http://host.docker.internal:3129}
+      - CACHE_TTL=604800
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - motherboard-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3130/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  vedika:
+    build:
+      context: ./plugins/vedika
+      dockerfile: Dockerfile
+    container_name: motherboard-vedika
+    environment:
+      - PORT=3140
+      - APP_ENV=${APP_ENV:-development}
+      - MONGODB_URI=mongodb://mongodb:27017/motherboard
+      - REDIS_URL=redis://redis:6379
+      - VEDIKA_API_URL=${VEDIKA_API_URL:-https://api.vedika.io/v2/astrology}
+      - VEDIKA_API_KEY=${VEDIKA_API_KEY}
+      - CACHE_TTL=604800
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - motherboard-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3140/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # --------------------------------------------------------------------------
+  # Clients (Auto-Generated)
+  # --------------------------------------------------------------------------
+
+  # LuckyChoudhary
+  luckychoudhary-server:
+    build:
+      context: ../LuckyChoudhary/LuckyChoudhary-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-luckychoudhary-server
+    environment:
+      - PORT=3101
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+  luckychoudhary-ui:
+    build:
+      context: ../LuckyChoudhary/LuckyChoudhary-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-luckychoudhary-ui
+    environment:
+      - PORT=3100
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - luckychoudhary-server
+    networks:
+      - motherboard-network
+
+  # Manav
+  manav-server:
+    build:
+      context: ../Manav/Manav-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-manav-server
+    environment:
+      - PORT=3103
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+  manav-ui:
+    build:
+      context: ../Manav/Manav-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-manav-ui
+    environment:
+      - PORT=3102
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - manav-server
+    networks:
+      - motherboard-network
+
+  # Parikshit
+  parikshit-server:
+    build:
+      context: ../Parikshit/Parikshit-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-parikshit-server
+    environment:
+      - PORT=3105
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+  parikshit-ui:
+    build:
+      context: ../Parikshit/Parikshit-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-parikshit-ui
+    environment:
+      - PORT=3104
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - parikshit-server
+    networks:
+      - motherboard-network
+
+  # Pooja
+  pooja-server:
+    build:
+      context: ../Pooja/Pooja-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-pooja-server
+    environment:
+      - PORT=3107
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+  pooja-ui:
+    build:
+      context: ../Pooja/Pooja-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-pooja-ui
+    environment:
+      - PORT=3106
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - pooja-server
+    networks:
+      - motherboard-network
+
+  # Ratika
+  ratika-server:
+    build:
+      context: ../Ratika/Ratika-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-ratika-server
+    environment:
+      - PORT=3109
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+  ratika-ui:
+    build:
+      context: ../Ratika/Ratika-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-ratika-ui
+    environment:
+      - PORT=3108
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - ratika-server
+    networks:
+      - motherboard-network
+
+  # Shanky
+  shanky-server:
+    build:
+      context: ../Shanky/Shanky-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-shanky-server
+    environment:
+      - PORT=3111
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+  shanky-ui:
+    build:
+      context: ../Shanky/Shanky-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-shanky-ui
+    environment:
+      - PORT=3110
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - shanky-server
+    networks:
+      - motherboard-network
+
+  # SSJK (Shree Shyam Jyotish Kendra)
+  ssjk-server:
+    build:
+      context: "../Shree Shyam Jyotish Kendra/SSJK-mb/server"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-ssjk-server
+    environment:
+      - PORT=3113
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+  ssjk-ui:
+    build:
+      context: "../Shree Shyam Jyotish Kendra/SSJK-mb/ui"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-ssjk-ui
+    environment:
+      - PORT=3112
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - ssjk-server
+    networks:
+      - motherboard-network
+
+  # Sinma
+  sinma-server:
+    build:
+      context: ../Sinma/Sinma-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-sinma-server
+    environment:
+      - PORT=3115
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+  sinma-ui:
+    build:
+      context: ../Sinma/Sinma-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-sinma-ui
+    environment:
+      - PORT=3114
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - sinma-server
+    networks:
+      - motherboard-network
+
+  # Stocks
+  stocks-server:
+    build:
+      context: ../Stocks/Stocks-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-stocks-server
+    environment:
+      - PORT=3117
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+  stocks-ui:
+    build:
+      context: ../Stocks/Stocks-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-stocks-ui
+    environment:
+      - PORT=3116
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - stocks-server
+    networks:
+      - motherboard-network
+
+  # Astroclarity
+  astroclarity:
+    build:
+      context: "../Vipin Kaushik/Astroclarity"
+      dockerfile: Dockerfile
+    container_name: motherboard-astroclarity
+    environment:
+      - PORT=3129
+      - MOTHERBOARD_SERVER_URL=http://vipinkaushik-server:3121
+      - MOTHERBOARD_WORKSPACE_SLUG=vipin-kaushik
+      - MOTHERBOARD_API_TOKEN=${MOTHERBOARD_API_TOKEN:-dev_token}
+    ports:
+      - "3129:3129"
+    depends_on:
+      - vipinkaushik-server
+    networks:
+      - motherboard-network
+
+  # Vipin Kaushik
+  vipinkaushik-server:
+    build:
+      context: "../Vipin Kaushik/VipinKaushik-mb/server"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-vipinkaushik-server
+    environment:
+      - PORT=3121
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+  vipinkaushik-ui:
+    build:
+      context: "../Vipin Kaushik/VipinKaushik-mb/ui"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-vipinkaushik-ui
+    environment:
+      - PORT=3120
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - vipinkaushik-server
+    networks:
+      - motherboard-network
+
+  # Wani
+  wani-server:
+    build:
+      context: ../Wani/Wani-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-wani-server
+    environment:
+      - PORT=3123
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+  wani-ui:
+    build:
+      context: ../Wani/Wani-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-wani-ui
+    environment:
+      - PORT=3122
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - wani-server
+    networks:
+      - motherboard-network
+
+  # Youvan
+  youvan-server:
+    build:
+      context: ../Youvan/Youvan-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-youvan-server
+    environment:
+      - PORT=3125
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+  youvan-ui:
+    build:
+      context: ../Youvan/Youvan-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-youvan-ui
+    environment:
+      - PORT=3124
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - youvan-server
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Additional Client Assets
+  # --------------------------------------------------------------------------
+
+  # VipinKaushik (Main)
+  vipinkaushik-main:
+    build:
+      context: "../Vipin Kaushik/VipinKaushik"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-vipinkaushik-main
+    environment:
+      - PORT=3128
+      - NODE_ENV=production
+    networks:
+      - motherboard-network
+
+  # reddit-universal-scraper
+  reddit-scraper:
+    build:
+      context: "../Vipin Kaushik/reddit-universal-scraper"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-python
+    container_name: motherboard-reddit-scraper
+    environment:
+      - PORT=3129
+    networks:
+      - motherboard-network
+
+  # SSJK-Telegram-Webapp
+  ssjk-telegram-webapp:
+    build:
+      context: "../Shree Shyam Jyotish Kendra/SSJK-telegram-webapp"
+      dockerfile: ../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-ssjk-telegram-webapp
+    networks:
+      - motherboard-network
+
+  # Gemstone (SSJK)
+  gemstone:
+    build:
+      context: "../Shree Shyam Jyotish Kendra/gemstone"
+      dockerfile: ../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-gemstone
+    networks:
+      - motherboard-network
+
+  # Rishta (Unified Client + Proxy)
+  rishta:
+    build:
+      context: ../
+      dockerfile: Motherboard/docker/Dockerfile.rishta
+    container_name: motherboard-rishta-app
+    environment:
+      - PORT=3000
+      - RISHTA_MB_PORT=3138
+      - NEXT_PUBLIC_RISHTA_MB_API=http://localhost:3138
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=motherboard
+    env_file:
+      - path: ./.env
+        required: false
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - motherboard-network
+    ports:
+      - "3005:3000"
+      - "3138:3138"
+
+  # Rishta-mb (Motherboard Integration Layer)
+  rishta-server:
+    build:
+      context: ../Rishta/Rishta-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-rishta-server
+    environment:
+      - PORT=3137
+      - MOTHERBOARD_URL=http://backend:8080
+    networks:
+      - motherboard-network
+
+  rishta-ui:
+    build:
+      context: ../Rishta/Rishta-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-rishta-ui
+    environment:
+      - PORT=3136
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - rishta-server
+    networks:
+      - motherboard-network
+
+  # Project Myra Backend (Khushboo)
+  myra-backend:
+    build:
+      context: "../Khushboo/Project Myra/backend"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-myra-backend
+    networks:
+      - motherboard-network
+
+  # Project Myra Client (Khushboo)
+  myra-client:
+    build:
+      context: "../Khushboo/Project Myra/client"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-myra-client
+    networks:
+      - motherboard-network
+
+  # Voice Transcriber (Utility)
+  voice-transcriber:
+    build:
+      context: ../Utility/Voice_transcriber
+      dockerfile: Dockerfile
+    container_name: motherboard-voice-transcriber
+    networks:
+      - motherboard-network
+
+  # Utility Portfolio
+  utility-portfolio:
+    build:
+      context: ../Utility/Portfolio
+      dockerfile: ../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-utility-portfolio
+    networks:
+      - motherboard-network
+
+  # Persona Calculator (Utility)
+  persona-calculator:
+    build:
+      context: ../Utility/PersonaCalculator
+      dockerfile: ../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-persona-calculator
+    networks:
+      - motherboard-network
+
+networks:
+  motherboard-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local

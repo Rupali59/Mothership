@@ -1,0 +1,195 @@
+# =============================================================================
+# Motherboard Platform - Local Development Monolith
+# Builds all platform services into a single container for local dev.
+# Usage: docker compose -f docker-compose.dev.yml up
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Stage 1: Go Builder - builds all 17 Go service binaries
+# ---------------------------------------------------------------------------
+FROM golang:1.24-alpine AS go-builder
+
+RUN apk add --no-cache git ca-certificates
+RUN mkdir -p /out
+
+# --- backend (apps/core-server) ---
+COPY apps/core-server/go.mod apps/core-server/go.sum /build/backend/
+WORKDIR /build/backend
+RUN go mod download
+COPY apps/core-server/ /build/backend/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/backend .
+
+# --- scheduler ---
+COPY services/scheduler/go.mod services/scheduler/go.sum /build/scheduler/
+WORKDIR /build/scheduler
+RUN go mod download
+COPY services/scheduler/ /build/scheduler/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/scheduler ./cmd/server/main.go
+
+# --- entitlement ---
+COPY services/entitlement/go.mod services/entitlement/go.sum /build/entitlement/
+WORKDIR /build/entitlement
+RUN go mod download
+COPY services/entitlement/ /build/entitlement/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/entitlement .
+
+# --- billing ---
+COPY services/billing/go.mod services/billing/go.sum /build/billing/
+WORKDIR /build/billing
+RUN go mod download
+COPY services/billing/ /build/billing/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/billing ./cmd/server/main.go
+
+# --- health ---
+COPY services/health/go.mod services/health/go.sum /build/health/
+WORKDIR /build/health
+RUN go mod download
+COPY services/health/ /build/health/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/health .
+
+# --- marketing ---
+COPY services/marketing/go.mod /build/marketing/
+WORKDIR /build/marketing
+RUN go mod tidy && go mod download
+COPY services/marketing/ /build/marketing/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/marketing main.go
+
+# --- cloud-adapter ---
+COPY services/cloud-adapter/go.mod services/cloud-adapter/go.sum /build/cloud-adapter/
+WORKDIR /build/cloud-adapter
+RUN go mod download
+COPY services/cloud-adapter/ /build/cloud-adapter/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/cloud-adapter .
+
+# --- notification ---
+COPY services/notification/go.mod services/notification/go.sum /build/notification/
+WORKDIR /build/notification
+RUN go mod download
+COPY services/notification/ /build/notification/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/notification ./cmd/server/main.go
+
+# --- storage ---
+COPY services/storage/go.mod services/storage/go.sum /build/storage/
+WORKDIR /build/storage
+RUN go mod download
+COPY services/storage/ /build/storage/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/storage ./cmd/server/main.go
+
+# --- inventory ---
+COPY plugins/inventory/go.mod plugins/inventory/go.sum /build/inventory/
+WORKDIR /build/inventory
+RUN go mod download
+COPY plugins/inventory/ /build/inventory/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/inventory ./cmd/server
+
+# --- orders ---
+COPY plugins/orders/go.mod plugins/orders/go.sum /build/orders/
+WORKDIR /build/orders
+RUN go mod download
+COPY plugins/orders/ /build/orders/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/orders ./cmd/server
+
+# --- email plugin ---
+COPY plugins/email/go.mod plugins/email/go.sum /build/email/
+WORKDIR /build/email
+RUN go mod download
+COPY plugins/email/ /build/email/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/email ./cmd/server
+
+# --- sms plugin ---
+COPY plugins/sms/go.mod plugins/sms/go.sum /build/sms/
+WORKDIR /build/sms
+RUN go mod download
+COPY plugins/sms/ /build/sms/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/sms ./cmd/server
+
+# --- whatsapp plugin ---
+COPY plugins/whatsapp/go.mod plugins/whatsapp/go.sum /build/whatsapp/
+WORKDIR /build/whatsapp
+RUN go mod download
+COPY plugins/whatsapp/ /build/whatsapp/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/whatsapp ./cmd/server
+
+# --- telegram plugin ---
+COPY plugins/telegram/go.mod plugins/telegram/go.sum /build/telegram/
+WORKDIR /build/telegram
+RUN go mod download
+COPY plugins/telegram/ /build/telegram/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/telegram ./cmd/server/main.go
+
+# --- razorpay plugin ---
+COPY plugins/razorpay/go.mod plugins/razorpay/go.sum /build/razorpay/
+WORKDIR /build/razorpay
+RUN go mod download
+COPY plugins/razorpay/ /build/razorpay/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/razorpay ./cmd/server/main.go
+
+# --- stripe plugin ---
+COPY plugins/stripe/go.mod plugins/stripe/go.sum /build/stripe/
+WORKDIR /build/stripe
+RUN go mod download
+COPY plugins/stripe/ /build/stripe/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/stripe ./cmd/server/main.go
+
+# ---------------------------------------------------------------------------
+# Stage 2: Node Builder - frontend + astrology plugins
+# ---------------------------------------------------------------------------
+FROM node:18-alpine AS node-builder
+
+# --- Frontend ---
+COPY apps/admin-dashboard/package.json apps/admin-dashboard/package-lock.json /build/frontend/
+WORKDIR /build/frontend
+RUN npm ci
+COPY apps/admin-dashboard/ /build/frontend/
+RUN npm run build
+
+# --- Jhora ---
+COPY plugins/jhora/package.json plugins/jhora/package-lock.json /build/jhora/
+WORKDIR /build/jhora
+RUN npm ci --only=production
+COPY plugins/jhora/ /build/jhora/
+
+# --- Vedika ---
+COPY plugins/vedika/package.json plugins/vedika/package-lock.json /build/vedika/
+WORKDIR /build/vedika
+RUN npm install --production
+COPY plugins/vedika/ /build/vedika/
+
+# ---------------------------------------------------------------------------
+# Stage 3: Runtime - all services with supervisord
+# ---------------------------------------------------------------------------
+FROM node:18-alpine
+
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    supervisor \
+    curl
+
+WORKDIR /app
+
+# Copy all Go binaries
+COPY --from=go-builder /out/ /app/bin/
+
+# Copy frontend (Next.js build output + node_modules)
+COPY --from=node-builder /build/frontend/ /app/frontend/
+
+# Copy Jhora
+COPY --from=node-builder /build/jhora/ /app/jhora/
+
+# Copy Vedika
+COPY --from=node-builder /build/vedika/ /app/vedika/
+
+# Copy notification templates if they exist
+COPY --from=go-builder /build/notification/internal/templates/ /app/notification-templates/
+
+# Copy supervisord config
+COPY docker/supervisord.conf /etc/supervisord.conf
+
+# Copy env files for services that need them
+COPY plugins/razorpay/.env* /app/env/razorpay/
+COPY plugins/stripe/.env* /app/env/stripe/
+
+EXPOSE 8080 3000 8081 8082 8083 8084 8085 8086 8087 8090 8091 8092 8093 8094 8096 8097 8098 3130 3140
+
+CMD ["supervisord", "-c", "/etc/supervisord.conf"]

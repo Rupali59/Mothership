@@ -1,0 +1,17 @@
+client:
+  name: "Rishta"
+  description: "Matrimonial portal"
+  status: "active"
+  role: "owner"
+  professional:
+    industry: "Matrimony"
+    websiteUrl: "https://rishta.com"
+
+websites:
+  - name: "Rishta Landing"
+    type: "site"
+    source: "github"
+    domains: ["rishta.com", "www.rishta.com"]
+    status: "active"
+    metadata:
+      theme: "red"

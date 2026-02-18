@@ -1,0 +1,352 @@
+# Local overrides for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
+
+services:
+  # Infrastructure
+  redis:
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_local:/data
+
+  minio:
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data_local:/data
+
+  mongodb:
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data_local:/data/db
+
+  # Core Platform
+  backend:
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENV=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./apps/core-server:/app
+      - /app/vendor # Don't overwrite vendor inside container
+
+  frontend:
+    build:
+      target: development
+    ports:
+      - "3000:4020"
+    environment:
+      - NODE_ENV=development
+      - API_URL=http://backend:8080
+      - MOTHERBOARD_API_URL=http://backend:8080
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    volumes:
+      - ./apps/admin-dashboard:/app
+      - /app/node_modules
+      - /app/.next
+
+  chaukidar:
+    ports:
+      - "3001:8000"
+    volumes:
+      - ../:/app/monitored_root
+      - ../Utility/chaukidar:/app
+
+  scheduler:
+    environment:
+      - APP_ENV=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./services/scheduler:/app
+      - ../:/app/monitored_root
+
+  # Microservices
+  entitlement:
+    ports:
+      - "8085:8085"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./services/entitlement:/app
+
+  billing:
+    ports:
+      - "8090:8090"
+    environment:
+      - APP_ENV=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./services/billing:/app
+
+  # Clients (Ports and Volumes)
+  luckychoudhary-server:
+    ports:
+      - "3101:3101"
+  luckychoudhary-ui:
+    ports:
+      - "3100:3100"
+
+  manav-server:
+    ports:
+      - "3103:3103"
+  manav-ui:
+    ports:
+      - "3102:3102"
+
+  parikshit-server:
+    ports:
+      - "3105:3105"
+  parikshit-ui:
+    ports:
+      - "3104:3104"
+
+  pooja-server:
+    ports:
+      - "3107:3107"
+  pooja-ui:
+    ports:
+      - "3106:3106"
+
+  ratika-server:
+    ports:
+      - "3109:3109"
+  ratika-ui:
+    ports:
+      - "3108:3108"
+
+  shanky-server:
+    ports:
+      - "3111:3111"
+  shanky-ui:
+    ports:
+      - "3110:3110"
+
+  ssjk-server:
+    ports:
+      - "3113:3113"
+  ssjk-ui:
+    ports:
+      - "3112:3112"
+
+  sinma-server:
+    ports:
+      - "3115:3115"
+  sinma-ui:
+    ports:
+      - "3114:3114"
+
+  stocks-server:
+    ports:
+      - "3117:3117"
+  stocks-ui:
+    ports:
+      - "3116:3116"
+
+  vipinkaushik-server:
+    ports:
+      - "3121:3121"
+  vipinkaushik-ui:
+    ports:
+      - "3120:3120"
+
+  wani-server:
+    ports:
+      - "3123:3123"
+  wani-ui:
+    ports:
+      - "3122:3122"
+
+  youvan-server:
+    ports:
+      - "3125:3125"
+  youvan-ui:
+    ports:
+      - "3124:3124"
+
+  vipinkaushik-main:
+    ports:
+      - "3128:3128"
+
+  reddit-scraper:
+    ports:
+      - "3129:3129"
+
+  ssjk-telegram-webapp:
+    ports:
+      - "3137:3001"
+    volumes:
+      - "../Shree Shyam Jyotish Kendra/SSJK-telegram-webapp:/app"
+
+  gemstone:
+    ports:
+      - "3138:3000"
+    volumes:
+      - "../Shree Shyam Jyotish Kendra/gemstone:/app"
+      - /app/node_modules
+      - /app/.next
+
+  rishta:
+    ports:
+      - "3139:3000"
+    volumes:
+      - ../Rishta/Rishta:/app
+      - /app/node_modules
+      - /app/.next
+
+  myra-backend:
+    ports:
+      - "3141:3001"
+    volumes:
+      - "../Khushboo/Project Myra/backend:/app"
+
+  myra-client:
+    ports:
+      - "3142:3000"
+    volumes:
+      - "../Khushboo/Project Myra/client:/app"
+      - /app/node_modules
+      - /app/.next
+
+  voice-transcriber:
+    ports:
+      - "3143:5001"
+    volumes:
+      - ../Utility/Voice_transcriber:/app
+
+  utility-portfolio:
+    ports:
+      - "3144:3000"
+    volumes:
+      - ../Utility/Portfolio:/app
+      - /app/node_modules
+      - /app/.next
+
+  persona-calculator:
+    ports:
+      - "3145:3000"
+    volumes:
+      - ../Utility/PersonaCalculator:/app
+      - /app/node_modules
+      - /app/.next
+
+  health:
+    ports:
+      - "8091:8091"
+    volumes:
+      - ./services/health:/app
+
+  marketing:
+    ports:
+      - "8092:8092"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./services/marketing:/app
+
+  cloud-adapter:
+    ports:
+      - "8093:8093"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./services/cloud-adapter:/app
+
+  notification:
+    ports:
+      - "8094:8094"
+    environment:
+      - APP_ENV=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./services/notification:/app
+
+  storage:
+    ports:
+      - "8098:8098"
+    environment:
+      - APP_ENV=development
+
+  inventory:
+    ports:
+      - "8096:8096"
+    volumes:
+      - ./plugins/inventory:/app
+
+  orders:
+    ports:
+      - "8097:8097"
+    volumes:
+      - ./plugins/orders:/app
+
+  # Plugins
+  email:
+    ports:
+      - "8081:8081"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./plugins/email:/app
+
+  sms:
+    ports:
+      - "8082:8082"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./plugins/sms:/app
+
+  whatsapp:
+    ports:
+      - "8083:8083"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./plugins/whatsapp:/app
+
+  telegram:
+    ports:
+      - "8084:8084"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./plugins/telegram:/app
+
+  razorpay:
+    ports:
+      - "8086:8086"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./plugins/razorpay:/app
+
+  stripe:
+    ports:
+      - "8087:8087"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./plugins/stripe:/app
+
+  jhora:
+    ports:
+      - "3130:3130"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./plugins/jhora:/app
+
+  vedika:
+    ports:
+      - "3140:3140"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./plugins/vedika:/app
+
+volumes:
+  redis_data_local:
+  minio_data_local:
+  mongodb_data_local:

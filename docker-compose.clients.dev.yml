@@ -1,0 +1,537 @@
+# =============================================================================
+# Client Services - Local Development Overlay
+# =============================================================================
+# Each client gets separate container(s). Use with docker-compose.dev.yml:
+#   docker compose -f docker-compose.dev.yml -f docker-compose.clients.dev.yml up
+#
+# To run a specific client:
+#   docker compose -f docker-compose.dev.yml -f docker-compose.clients.dev.yml up motherboard <client-services>
+# =============================================================================
+
+services:
+  # --------------------------------------------------------------------------
+  # LuckyChoudhary
+  # --------------------------------------------------------------------------
+  luckychoudhary-server:
+    build:
+      context: ../LuckyChoudhary/LuckyChoudhary-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-luckychoudhary-server
+    ports:
+      - "3101:3101"
+    environment:
+      - PORT=3101
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+  luckychoudhary-ui:
+    build:
+      context: ../LuckyChoudhary/LuckyChoudhary-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-luckychoudhary-ui
+    ports:
+      - "3100:3100"
+    environment:
+      - PORT=3100
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - luckychoudhary-server
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Manav
+  # --------------------------------------------------------------------------
+  manav-server:
+    build:
+      context: ../Manav/Manav-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-manav-server
+    ports:
+      - "3103:3103"
+    environment:
+      - PORT=3103
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+  manav-ui:
+    build:
+      context: ../Manav/Manav-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-manav-ui
+    ports:
+      - "3102:3102"
+    environment:
+      - PORT=3102
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - manav-server
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Parikshit
+  # --------------------------------------------------------------------------
+  parikshit-server:
+    build:
+      context: ../Parikshit/Parikshit-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-parikshit-server
+    ports:
+      - "3105:3105"
+    environment:
+      - PORT=3105
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+  parikshit-ui:
+    build:
+      context: ../Parikshit/Parikshit-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-parikshit-ui
+    ports:
+      - "3104:3104"
+    environment:
+      - PORT=3104
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - parikshit-server
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Pooja
+  # --------------------------------------------------------------------------
+  pooja-server:
+    build:
+      context: ../Pooja/Pooja-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-pooja-server
+    ports:
+      - "3107:3107"
+    environment:
+      - PORT=3107
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+  pooja-ui:
+    build:
+      context: ../Pooja/Pooja-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-pooja-ui
+    ports:
+      - "3106:3106"
+    environment:
+      - PORT=3106
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - pooja-server
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Ratika
+  # --------------------------------------------------------------------------
+  ratika-server:
+    build:
+      context: ../Ratika/Ratika-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-ratika-server
+    ports:
+      - "3109:3109"
+    environment:
+      - PORT=3109
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+  ratika-ui:
+    build:
+      context: ../Ratika/Ratika-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-ratika-ui
+    ports:
+      - "3108:3108"
+    environment:
+      - PORT=3108
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - ratika-server
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Shanky
+  # --------------------------------------------------------------------------
+  shanky-server:
+    build:
+      context: ../Shanky/Shanky-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-shanky-server
+    ports:
+      - "3111:3111"
+    environment:
+      - PORT=3111
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+  shanky-ui:
+    build:
+      context: ../Shanky/Shanky-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-shanky-ui
+    ports:
+      - "3110:3110"
+    environment:
+      - PORT=3110
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - shanky-server
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # SSJK (Shree Shyam Jyotish Kendra)
+  # --------------------------------------------------------------------------
+  ssjk-server:
+    build:
+      context: "../Shree Shyam Jyotish Kendra/SSJK-mb/server"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-ssjk-server
+    ports:
+      - "3113:3113"
+    environment:
+      - PORT=3113
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+  ssjk-ui:
+    build:
+      context: "../Shree Shyam Jyotish Kendra/SSJK-mb/ui"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-ssjk-ui
+    ports:
+      - "3112:3112"
+    environment:
+      - PORT=3112
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - ssjk-server
+    networks:
+      - motherboard-network
+
+  ssjk-telegram-webapp:
+    build:
+      context: "../Shree Shyam Jyotish Kendra/SSJK-telegram-webapp"
+      dockerfile: ../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-ssjk-telegram-webapp
+    ports:
+      - "3137:3001"
+    networks:
+      - motherboard-network
+
+  gemstone:
+    build:
+      context: "../Shree Shyam Jyotish Kendra/gemstone"
+      dockerfile: ../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-gemstone
+    ports:
+      - "3138:3000"
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Sinma
+  # --------------------------------------------------------------------------
+  sinma-server:
+    build:
+      context: ../Sinma/Sinma-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-sinma-server
+    ports:
+      - "3115:3115"
+    environment:
+      - PORT=3115
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+  sinma-ui:
+    build:
+      context: ../Sinma/Sinma-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-sinma-ui
+    ports:
+      - "3114:3114"
+    environment:
+      - PORT=3114
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - sinma-server
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Stocks
+  # --------------------------------------------------------------------------
+  stocks-server:
+    build:
+      context: ../Stocks/Stocks-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-stocks-server
+    ports:
+      - "3117:3117"
+    environment:
+      - PORT=3117
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+  stocks-ui:
+    build:
+      context: ../Stocks/Stocks-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-stocks-ui
+    ports:
+      - "3116:3116"
+    environment:
+      - PORT=3116
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - stocks-server
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Vipin Kaushik
+  # --------------------------------------------------------------------------
+  vipinkaushik-server:
+    build:
+      context: "../Vipin Kaushik/VipinKaushik-mb/server"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-vipinkaushik-server
+    ports:
+      - "3121:3121"
+    environment:
+      - PORT=3121
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+  vipinkaushik-ui:
+    build:
+      context: "../Vipin Kaushik/VipinKaushik-mb/ui"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-vipinkaushik-ui
+    ports:
+      - "3120:3120"
+    environment:
+      - PORT=3120
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - vipinkaushik-server
+    networks:
+      - motherboard-network
+
+  astroclarity:
+    build:
+      context: "../Vipin Kaushik/Astroclarity"
+      dockerfile: Dockerfile
+    container_name: motherboard-astroclarity
+    ports:
+      - "3129:3129"
+    environment:
+      - PORT=3129
+      - MOTHERBOARD_SERVER_URL=http://vipinkaushik-server:3121
+      - MOTHERBOARD_WORKSPACE_SLUG=vipin-kaushik
+      - MOTHERBOARD_API_TOKEN=${MOTHERBOARD_API_TOKEN}
+    depends_on:
+      - vipinkaushik-server
+    networks:
+      - motherboard-network
+
+  vipinkaushik-main:
+    build:
+      context: "../Vipin Kaushik/VipinKaushik"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-vipinkaushik-main
+    ports:
+      - "3128:3128"
+    environment:
+      - PORT=3128
+      - NODE_ENV=production
+    networks:
+      - motherboard-network
+
+  reddit-scraper:
+    build:
+      context: "../Vipin Kaushik/reddit-universal-scraper"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-python
+    container_name: motherboard-reddit-scraper
+    ports:
+      - "3129:3129"
+    environment:
+      - PORT=3129
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Wani
+  # --------------------------------------------------------------------------
+  wani-server:
+    build:
+      context: ../Wani/Wani-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-wani-server
+    ports:
+      - "3123:3123"
+    environment:
+      - PORT=3123
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+  wani-ui:
+    build:
+      context: ../Wani/Wani-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-wani-ui
+    ports:
+      - "3122:3122"
+    environment:
+      - PORT=3122
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - wani-server
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Youvan
+  # --------------------------------------------------------------------------
+  youvan-server:
+    build:
+      context: ../Youvan/Youvan-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-youvan-server
+    ports:
+      - "3125:3125"
+    environment:
+      - PORT=3125
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+  youvan-ui:
+    build:
+      context: ../Youvan/Youvan-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-youvan-ui
+    ports:
+      - "3124:3124"
+    environment:
+      - PORT=3124
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - youvan-server
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Rishta
+  # --------------------------------------------------------------------------
+  rishta:
+    build:
+      context: ../Rishta/Rishta
+      dockerfile: Dockerfile
+    container_name: motherboard-rishta-app
+    ports:
+      - "3005:3000"
+      - "3139:3138"
+    environment:
+      - PORT=3000
+      - RISHTA_MB_PORT=3138
+      - NEXT_PUBLIC_RISHTA_MB_API=http://localhost:3138
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=motherboard
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - motherboard-network
+
+  rishta-server:
+    build:
+      context: ../Rishta/Rishta-mb/server
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-rishta-server
+    environment:
+      - PORT=3137
+      - MOTHERBOARD_URL=http://motherboard:8080
+    networks:
+      - motherboard-network
+
+  rishta-ui:
+    build:
+      context: ../Rishta/Rishta-mb/ui
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-rishta-ui
+    ports:
+      - "3136:3136"
+    environment:
+      - PORT=3136
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    depends_on:
+      - rishta-server
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Khushboo - Project Myra
+  # --------------------------------------------------------------------------
+  myra-backend:
+    build:
+      context: "../Khushboo/Project Myra/backend"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-server
+    container_name: motherboard-myra-backend
+    ports:
+      - "3141:3001"
+    networks:
+      - motherboard-network
+
+  myra-client:
+    build:
+      context: "../Khushboo/Project Myra/client"
+      dockerfile: ../../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-myra-client
+    ports:
+      - "3142:3000"
+    networks:
+      - motherboard-network
+
+  # --------------------------------------------------------------------------
+  # Utilities
+  # --------------------------------------------------------------------------
+  voice-transcriber:
+    build:
+      context: ../Utility/Voice_transcriber
+      dockerfile: Dockerfile
+    container_name: motherboard-voice-transcriber
+    ports:
+      - "3143:5001"
+    networks:
+      - motherboard-network
+
+  utility-portfolio:
+    build:
+      context: ../Utility/Portfolio
+      dockerfile: ../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-utility-portfolio
+    ports:
+      - "3144:3000"
+    networks:
+      - motherboard-network
+
+  persona-calculator:
+    build:
+      context: ../Utility/PersonaCalculator
+      dockerfile: ../../Motherboard/docker/Dockerfile.client-ui
+    container_name: motherboard-persona-calculator
+    ports:
+      - "3145:3000"
+    networks:
+      - motherboard-network

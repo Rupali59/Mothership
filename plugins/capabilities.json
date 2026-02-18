@@ -1,0 +1,34 @@
+[
+  {
+    "id": "inventory",
+    "name": "Inventory Management",
+    "description": "Track stock levels, manage items, and handle reservations.",
+    "category": "business",
+    "entitlement_key": "inventory",
+    "docs_url": "/docs/inventory"
+  },
+  {
+    "id": "orders",
+    "name": "Order Management",
+    "description": "Process and track customer orders, integrated with inventory.",
+    "category": "business",
+    "entitlement_key": "orders",
+    "docs_url": "/docs/orders"
+  },
+  {
+    "id": "astrology-jhora",
+    "name": "JHora Astrology",
+    "description": "Comprehensive Vedic astrology calculations via JHora engine.",
+    "category": "astrology",
+    "entitlement_key": "astrology-jhora",
+    "docs_url": "/plugins/verticals/astrology/jhora/docs/architecture"
+  },
+  {
+    "id": "astrology-vedika",
+    "name": "Vedika Astrology",
+    "description": "Modern Vedic astrology calculations via Vedika.io Intelligence API.",
+    "category": "astrology",
+    "entitlement_key": "astrology-vedika",
+    "docs_url": "/plugins/verticals/astrology/vedika/docs/architecture"
+  }
+]

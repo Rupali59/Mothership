@@ -1,0 +1,37 @@
+# Git
+.git
+.gitignore
+
+# Node modules (will be installed during build)
+**/node_modules
+
+# Build outputs
+**/.next
+**/dist
+**/build
+
+# IDE
+.vscode
+.idea
+**/*.swp
+
+# OS
+.DS_Store
+**/.DS_Store
+
+# Test/docs
+**/tests
+**/test
+**/*.test.*
+**/*.spec.*
+docs/
+
+# Docker compose files (not needed in build context)
+docker-compose*.yml
+
+# Env files at root (service-level .env files ARE needed)
+.env
+.env.*
+
+# Client directories (not needed for platform build)
+# These are handled by docker-compose.clients.dev.yml separately

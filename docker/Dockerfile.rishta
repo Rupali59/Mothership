@@ -1,0 +1,33 @@
+# Stage 1: Build the Go Proxy
+FROM golang:1.21-alpine AS proxy-builder
+WORKDIR /app
+COPY ./Motherboard/core/motherboard-server ./motherboard-server
+WORKDIR /app/motherboard-server
+RUN go build -o /app/rishta-mb ./cmd/rishta-mb/main.go
+
+# Stage 2: Build the Next.js App
+FROM node:18-alpine AS next-builder
+WORKDIR /app
+COPY ./Rishta/Rishta/package*.json ./
+RUN npm install
+COPY ./Rishta/Rishta ./
+RUN npm run build
+
+# Stage 3: Final Image
+FROM node:18-alpine
+WORKDIR /app
+# Install curl for healthchecks
+RUN apk add --no-cache curl
+
+COPY --from=next-builder /app/.next ./.next
+COPY --from=next-builder /app/public ./public
+COPY --from=next-builder /app/package*.json ./
+COPY --from=next-builder /app/node_modules ./node_modules
+COPY --from=proxy-builder /app/rishta-mb ./rishta-mb
+
+# Copy entrypoint script from Rishta
+COPY ./Rishta/Rishta/entrypoint.sh ./
+RUN chmod +x entrypoint.sh
+
+EXPOSE 3000 8081
+CMD ["./entrypoint.sh"]

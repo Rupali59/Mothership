@@ -1,0 +1,30 @@
+go 1.25.5
+
+use (
+	.
+	./apps/core-server
+	./apps/core-server/internal/config
+	./infrastructure/queue
+	./libs/common
+	./libs/comms-sdk
+	./pkg/lifecycle
+	./plugins/email
+	./plugins/inventory
+	./plugins/orders
+	./plugins/razorpay
+	./plugins/sms
+	./plugins/stripe
+	./plugins/telegram
+	./plugins/whatsapp
+	./services/auth
+	./services/billing
+	./services/chaukidar
+	./services/cloud-adapter
+	./services/entitlement
+	./services/health
+	./services/marketing
+	./services/notification
+	./services/scheduler
+	./services/storage
+	./services/inventory-management
+)
