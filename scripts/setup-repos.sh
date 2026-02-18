@@ -36,7 +36,7 @@ clone_repo "apps/core-server" "https://github.com/Rupali59/Motherboard-server.gi
 clone_repo "apps/core-frontend" "https://github.com/Rupali59/MotherBoard.git"
 
 # --- Services ---
-clone_repo "services/auth" "https://github.com/Rupali59/Motherboard-server.git" # Auth shares repo with server for now
+clone_repo "services/auth" "https://github.com/Rupali59/Motherboard-auth-service.git"
 clone_repo "services/billing" "https://github.com/Rupali59/Motherboard-billing-service.git"
 clone_repo "services/chaukidar" "https://github.com/Rupali59/Motherboard-chaukidar.git"
 clone_repo "services/cloud-adapter" "https://github.com/Rupali59/Motherboard-cloud-adapter.git"
