@@ -21,7 +21,7 @@ services:
     #   echo '0 */6 * * * mongodump --out /backup/\$$(date +\\%Y\\%m\\%d_\\%H\\%M\\%S) --gzip' | crontab -;
     #   crond -f"
 
-  # Core Platform - Backend
+    # Core Platform - Backend
   backend:
     environment:
       - APP_ENV=production
@@ -38,7 +38,7 @@ services:
   # Core Platform - Frontend
   frontend:
     build:
-      context: ./apps/admin-dashboard
+      context: ./apps/frontend
       dockerfile: Dockerfile
       target: production
     environment:
@@ -46,7 +46,7 @@ services:
       - NEXT_PUBLIC_API_URL=${BACKEND_URL:-https://api.yourdomain.com}
       - NEXTAUTH_URL=${FRONTEND_URL:-https://yourdomain.com}
     env_file:
-      - ./apps/admin-dashboard/.env.production
+      - ./apps/frontend/.env.production
     restart: always
     volumes: []
 

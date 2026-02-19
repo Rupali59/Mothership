@@ -1,4 +1,5 @@
-.PHONY: lint lint-go lint-ts test scaffold validate-ports sync-ports update-ports docker-up docker-down
+.PHONY: lint lint-go lint-ts test scaffold validate-ports sync-ports update-ports docker-up docker-down \
+        seed-config gen-env bootstrap dev-backend dev-frontend dev
 
 # Lint all Go modules in the workspace
 lint-go:
@@ -6,7 +7,7 @@ lint-go:
 
 # Lint TypeScript frontend
 lint-ts:
-	cd apps/admin-dashboard && npx next lint
+	cd apps/frontend && npx next lint
 
 # Lint everything
 lint: lint-go lint-ts
@@ -37,3 +38,30 @@ docker-up:
 
 docker-down:
 	docker compose -f docker-compose.yml -f docker-compose.local.yml down
+
+# ---- MongoDB source-of-truth workflow ----------------------------------------
+
+# Seed entity_configs.json into MongoDB
+seed-config:
+	@go run ./cmd/seed-config
+
+# Generate per-service .env.local files from MongoDB entity configs
+gen-env:
+	@go run ./cmd/gen-env --env local
+
+# Full bootstrap: seed configs + ports + generate all env files
+bootstrap: seed-config sync-ports gen-env
+
+# ---- Local development (non-Docker) ------------------------------------------
+
+# Start backend with .env.local pre-loaded so godotenv.Load() won't override vars
+dev-backend:
+	@set -a; . ./apps/core-server/.env.local; set +a; $(MAKE) -C apps/core-server dev
+
+# Start frontend dev server on port 4020
+dev-frontend:
+	@$(MAKE) -C apps/frontend dev 2>/dev/null || (cd apps/frontend && npm run dev)
+
+# Start both backend and frontend in parallel
+dev:
+	@$(MAKE) -j2 dev-backend dev-frontend

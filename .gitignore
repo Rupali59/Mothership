@@ -26,9 +26,13 @@ server
 motherboard-server
 rishta-mb
 port-registry
+gen-env
 *.exe
 *.test
 *.prof
+
+# Generated port configuration
+.ports.env
 
 # OS specific files
 .DS_Store
@@ -79,3 +83,5 @@ services/inventory-management/
 services/entitlement/
 apps/core-frontend/
 env.d/
+
+*.md

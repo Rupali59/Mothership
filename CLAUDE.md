@@ -8,7 +8,7 @@ Motherboard is a multi-tenant platform for workspace management, communication p
 
 ## Architecture
 
-- **apps/admin-dashboard/** — Next.js 15 + React 18 + TypeScript frontend (port 4020 dev)
+- **apps/frontend/** — Next.js 15 + React 18 + TypeScript frontend (port 4020 dev)
 - **apps/core-server/** — Go + Gin backend API (port 4021 local, 8080 Docker)
 - **services/** — Independent Go microservices (auth, billing, notification, scheduler, health, entitlement, storage, task-tracker, marketing, cloud-adapter)
 - **plugins/** — Communication/payment plugins: email (8081), sms (8082), whatsapp (8083), telegram (8084), stripe, razorpay, inventory, orders
@@ -18,7 +18,8 @@ Multi-tenant isolation uses workspace slugs (X-Workspace-Slug header) with RBAC.
 
 ## Common Commands
 
-### Frontend (from `apps/admin-dashboard/`)
+### Frontend (from `apps/frontend/`)
+
 ```bash
 npm run dev          # Dev server with Turbo on port 4020
 npm run build        # Production build
@@ -31,6 +32,7 @@ npm run format       # Prettier formatting
 ```
 
 ### Backend (from `apps/core-server/`)
+
 ```bash
 make dev             # Hot-reload dev server (Air) on port 4021
 make run             # Run on port 4021 (auto-kills conflicting process)
@@ -45,6 +47,7 @@ make deps            # go mod download && go mod tidy
 ```
 
 ### Docker (full platform)
+
 ```bash
 docker compose -f docker-compose.dev.yml up                 # Platform services
 docker compose -f docker-compose.dev.yml -f docker-compose.clients.dev.yml up  # With clients

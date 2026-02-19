@@ -44,16 +44,13 @@ services:
       - MOTHERBOARD_API_URL=http://backend:8080
       - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
     volumes:
-      - ./apps/admin-dashboard:/app
+      - ./apps/frontend:/app
       - /app/node_modules
       - /app/.next
 
   chaukidar:
     ports:
       - "3001:8000"
-    volumes:
-      - ../:/app/monitored_root
-      - ../Utility/chaukidar:/app
 
   scheduler:
     environment:
@@ -64,6 +61,14 @@ services:
       - ../:/app/monitored_root
 
   # Microservices
+  auth:
+    ports:
+      - "8088:8088"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./services/auth:/app
+
   entitlement:
     ports:
       - "8085:8085"
@@ -80,157 +85,6 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./services/billing:/app
-
-  # Clients (Ports and Volumes)
-  luckychoudhary-server:
-    ports:
-      - "3101:3101"
-  luckychoudhary-ui:
-    ports:
-      - "3100:3100"
-
-  manav-server:
-    ports:
-      - "3103:3103"
-  manav-ui:
-    ports:
-      - "3102:3102"
-
-  parikshit-server:
-    ports:
-      - "3105:3105"
-  parikshit-ui:
-    ports:
-      - "3104:3104"
-
-  pooja-server:
-    ports:
-      - "3107:3107"
-  pooja-ui:
-    ports:
-      - "3106:3106"
-
-  ratika-server:
-    ports:
-      - "3109:3109"
-  ratika-ui:
-    ports:
-      - "3108:3108"
-
-  shanky-server:
-    ports:
-      - "3111:3111"
-  shanky-ui:
-    ports:
-      - "3110:3110"
-
-  ssjk-server:
-    ports:
-      - "3113:3113"
-  ssjk-ui:
-    ports:
-      - "3112:3112"
-
-  sinma-server:
-    ports:
-      - "3115:3115"
-  sinma-ui:
-    ports:
-      - "3114:3114"
-
-  stocks-server:
-    ports:
-      - "3117:3117"
-  stocks-ui:
-    ports:
-      - "3116:3116"
-
-  vipinkaushik-server:
-    ports:
-      - "3121:3121"
-  vipinkaushik-ui:
-    ports:
-      - "3120:3120"
-
-  wani-server:
-    ports:
-      - "3123:3123"
-  wani-ui:
-    ports:
-      - "3122:3122"
-
-  youvan-server:
-    ports:
-      - "3125:3125"
-  youvan-ui:
-    ports:
-      - "3124:3124"
-
-  vipinkaushik-main:
-    ports:
-      - "3128:3128"
-
-  reddit-scraper:
-    ports:
-      - "3129:3129"
-
-  ssjk-telegram-webapp:
-    ports:
-      - "3137:3001"
-    volumes:
-      - "../Shree Shyam Jyotish Kendra/SSJK-telegram-webapp:/app"
-
-  gemstone:
-    ports:
-      - "3138:3000"
-    volumes:
-      - "../Shree Shyam Jyotish Kendra/gemstone:/app"
-      - /app/node_modules
-      - /app/.next
-
-  rishta:
-    ports:
-      - "3139:3000"
-    volumes:
-      - ../Rishta/Rishta:/app
-      - /app/node_modules
-      - /app/.next
-
-  myra-backend:
-    ports:
-      - "3141:3001"
-    volumes:
-      - "../Khushboo/Project Myra/backend:/app"
-
-  myra-client:
-    ports:
-      - "3142:3000"
-    volumes:
-      - "../Khushboo/Project Myra/client:/app"
-      - /app/node_modules
-      - /app/.next
-
-  voice-transcriber:
-    ports:
-      - "3143:5001"
-    volumes:
-      - ../Utility/Voice_transcriber:/app
-
-  utility-portfolio:
-    ports:
-      - "3144:3000"
-    volumes:
-      - ../Utility/Portfolio:/app
-      - /app/node_modules
-      - /app/.next
-
-  persona-calculator:
-    ports:
-      - "3145:3000"
-    volumes:
-      - ../Utility/PersonaCalculator:/app
-      - /app/node_modules
-      - /app/.next
 
   health:
     ports:

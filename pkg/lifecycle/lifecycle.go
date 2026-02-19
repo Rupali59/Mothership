@@ -30,12 +30,12 @@ type Server struct {
 	router     *gin.Engine
 	logger     *zap.Logger
 
-	state       atomic.Int32
-	startupDone atomic.Bool
+	state          atomic.Int32
+	startupDone    atomic.Bool
 	shutdownBudget time.Duration
 	drainPeriod    time.Duration
 
-	onShutdown    []func(ctx context.Context)
+	onShutdown     []func(ctx context.Context)
 	readinessCheck ReadinessCheck
 }
 

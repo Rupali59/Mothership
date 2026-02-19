@@ -1,15 +1,35 @@
 {
   "$schema": "Motherboard port registry — single source of truth",
   "bands": {
-    "infrastructure": { "min": 6379, "max": 27017, "note": "Fixed ports: Redis 6379, MinIO 9000-9001, MongoDB 27017" },
-    "core": { "min": 3000, "max": 4021, "note": "Frontend 3000, dev 4020-4021, backend 8080" },
-    "services": { "min": 8081, "max": 8099, "note": "Microservices and plugins" },
-    "clients_static": { "min": 3100, "max": 3199, "note": "Client UI/server pairs" },
-    "clients_dynamic": { "min": 5000, "max": 5099, "note": "Chaukidar auto-provisioned" }
+    "infrastructure": {
+      "min": 6379,
+      "max": 27017,
+      "note": "Fixed ports: Redis 6379, MinIO 9000-9001, MongoDB 27017"
+    },
+    "core": {
+      "min": 3000,
+      "max": 4021,
+      "note": "Frontend 3000, dev 4020-4021, backend 8080"
+    },
+    "services": {
+      "min": 8081,
+      "max": 8099,
+      "note": "Microservices and plugins"
+    },
+    "clients_static": {
+      "min": 3100,
+      "max": 3199,
+      "note": "Client UI/server pairs"
+    },
+    "clients_dynamic": {
+      "min": 5000,
+      "max": 5099,
+      "note": "Chaukidar auto-provisioned"
+    }
   },
   "assignments": {
     "apps/core-server": 8080,
-    "apps/admin-dashboard": 3000,
+    "apps/frontend": 3000,
     "plugins/email": 8081,
     "plugins/sms": 8082,
     "plugins/whatsapp": 8083,

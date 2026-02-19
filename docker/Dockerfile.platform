@@ -137,10 +137,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /out/stripe ./cmd/server/main.go
 FROM node:18-alpine AS node-builder
 
 # --- Frontend ---
-COPY apps/admin-dashboard/package.json apps/admin-dashboard/package-lock.json /build/frontend/
+COPY apps/frontend/package.json apps/frontend/package-lock.json /build/frontend/
 WORKDIR /build/frontend
 RUN npm ci
-COPY apps/admin-dashboard/ /build/frontend/
+COPY apps/frontend/ /build/frontend/
 RUN npm run build
 
 # --- Jhora ---
@@ -190,6 +190,14 @@ COPY docker/supervisord.conf /etc/supervisord.conf
 COPY plugins/razorpay/.env* /app/env/razorpay/
 COPY plugins/stripe/.env* /app/env/stripe/
 
+# Copy .ports.env for supervisord %(ENV_X_PORT)s references
+COPY .ports.env /app/.ports.env
+
+# Create entrypoint that loads .ports.env before supervisord
+RUN printf '#!/bin/sh\nset -a\n[ -f /app/.ports.env ] && . /app/.ports.env\nset +a\nexec "$@"\n' > /app/entrypoint.sh \
+    && chmod +x /app/entrypoint.sh
+
 EXPOSE 8080 3000 8081 8082 8083 8084 8085 8086 8087 8090 8091 8092 8093 8094 8096 8097 8098 3130 3140
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["supervisord", "-c", "/etc/supervisord.conf"]

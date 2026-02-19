@@ -1,0 +1,614 @@
+{
+  "apps/core-server": {
+    "local": {
+      "PORT": "8080",
+      "ENV": "local",
+      "APP_URL": "http://localhost:4021",
+      "FRONTEND_URL": "http://localhost:3000",
+      "STORAGE_TYPE": "local",
+      "CRM_MONGODB_URI": "mongodb://mongodb:27017",
+      "CRM_DB_NAME": "motherboard",
+      "JWT_SECRET": "QMWeE1UpmAipFuH2ZcxTWDq2xa2/UiAPzi9vXda/dfg=",
+      "OAUTH_TOKEN_EXPIRY": "1h",
+      "OAUTH_DEFAULT_SCOPES": "read,write",
+      "SESSION_TOKEN_EXPIRY": "168h",
+      "MAX_SESSIONS_PER_USER": "10",
+      "USER_API_TOKEN_EXPIRY": "2160h",
+      "WEBAUTHN_RP_ID": "localhost",
+      "WEBAUTHN_ORIGIN": "http://localhost:3000",
+      "WEBAUTHN_RP_NAME": "Motherboard (Local)",
+      "DEFAULT_PASSKEY_NAME": "Motherboard",
+      "CORS_ALLOWED_ORIGINS": "http://localhost:3000",
+      "LOG_LEVEL": "info",
+      "EMAIL_PLUGIN_URL": "http://email:8081",
+      "SMS_PLUGIN_URL": "http://sms:8082",
+      "WHATSAPP_PLUGIN_URL": "http://whatsapp:8083",
+      "TELEGRAM_PLUGIN_URL": "http://telegram:8084",
+      "BILLING_SERVICE_URL": "http://billing:8090",
+      "HEALTH_SERVICE_URL": "http://health:8091",
+      "MARKETING_SERVICE_URL": "http://marketing:8092",
+      "CLOUD_ADAPTER_URL": "http://cloud-adapter:8093",
+      "NOTIFICATION_SERVICE_URL": "http://notification:8094",
+      "AUTH_SERVICE_URL": "http://auth:8088",
+      "ENTITLEMENT_SERVICE_URL": "http://entitlement:8085",
+      "STORAGE_SERVICE_URL": "http://storage:8098",
+      "JHORA_SERVICE_URL": "http://jhora:3130",
+      "VEDIKA_SERVICE_URL": "http://vedika:3140",
+      "PORTS_REGISTRY_PATH": "mongodb",
+      "REDIS_URL": "redis://redis:6379",
+      "EXOTEL_API_KEY": "",
+      "EXOTEL_API_TOKEN": "",
+      "EXOTEL_ACCOUNT_SID": "",
+      "EXOTEL_REGION": "Singapore",
+      "EXOTEL_SUBDOMAIN": "api.exotel.com",
+      "ATLASSIAN_SITE": "",
+      "ATLASSIAN_EMAIL": "",
+      "ATLASSIAN_API_TOKEN": "",
+      "ATLASSIAN_CLOUD_ID": "",
+      "GITHUB_TOKEN": ""
+    },
+    "development": {
+      "PORT": "8080",
+      "ENV": "development",
+      "STORAGE_TYPE": "local",
+      "CRM_MONGODB_URI": "mongodb://mongodb:27017",
+      "CRM_DB_NAME": "motherboard",
+      "JWT_SECRET": "QMWeE1UpmAipFuH2ZcxTWDq2xa2/UiAPzi9vXda/dfg=",
+      "OAUTH_TOKEN_EXPIRY": "1h",
+      "OAUTH_DEFAULT_SCOPES": "read,write",
+      "SESSION_TOKEN_EXPIRY": "168h",
+      "MAX_SESSIONS_PER_USER": "10",
+      "USER_API_TOKEN_EXPIRY": "2160h",
+      "WEBAUTHN_RP_ID": "localhost",
+      "WEBAUTHN_ORIGIN": "http://localhost:3000",
+      "WEBAUTHN_RP_NAME": "Motherboard",
+      "DEFAULT_PASSKEY_NAME": "Motherboard",
+      "CORS_ALLOWED_ORIGINS": "http://localhost:3000",
+      "LOG_LEVEL": "info",
+      "EMAIL_PLUGIN_URL": "http://email:8081",
+      "SMS_PLUGIN_URL": "http://sms:8082",
+      "WHATSAPP_PLUGIN_URL": "http://whatsapp:8083",
+      "TELEGRAM_PLUGIN_URL": "http://telegram:8084",
+      "BILLING_SERVICE_URL": "http://billing:8090",
+      "HEALTH_SERVICE_URL": "http://health:8091",
+      "MARKETING_SERVICE_URL": "http://marketing:8092",
+      "CLOUD_ADAPTER_URL": "http://cloud-adapter:8093",
+      "NOTIFICATION_SERVICE_URL": "http://notification:8094",
+      "AUTH_SERVICE_URL": "http://auth:8088",
+      "ENTITLEMENT_SERVICE_URL": "http://entitlement:8085",
+      "STORAGE_SERVICE_URL": "http://storage:8098",
+      "JHORA_SERVICE_URL": "http://jhora:3130",
+      "VEDIKA_SERVICE_URL": "http://vedika:3140",
+      "PORTS_REGISTRY_PATH": "mongodb",
+      "REDIS_URL": "redis://redis:6379"
+    }
+  },
+
+  "apps/frontend": {
+    "local": {
+      "PORT": "3000",
+      "ENV": "local",
+      "NODE_ENV": "development",
+      "NEXT_PUBLIC_ENV": "local",
+      "MOTHERBOARD_API_URL": "http://backend:8080",
+      "API_URL": "http://backend:8080",
+      "NEXT_PUBLIC_MOTHERBOARD_API_URL": "http://localhost:8080",
+      "NEXT_PUBLIC_SITE_URL": "http://localhost:3000",
+      "NEXT_PUBLIC_ORIGIN": "http://localhost:3000",
+      "NEXT_PUBLIC_RP_ID": "localhost",
+      "NEXTAUTH_URL": "http://localhost:3000",
+      "HEALTH_SERVICE_URL": "http://health:8091",
+      "ENABLE_HEALTH_EMITTER": "true",
+      "HEALTH_EMITTER_INTERVAL_MS": "60000"
+    },
+    "development": {
+      "PORT": "3000",
+      "ENV": "development",
+      "NODE_ENV": "development",
+      "NEXT_PUBLIC_ENV": "development",
+      "MOTHERBOARD_API_URL": "http://backend:8080",
+      "API_URL": "http://backend:8080",
+      "HEALTH_SERVICE_URL": "http://health:8091",
+      "NEXT_PUBLIC_MOTHERBOARD_API_URL": "http://localhost:8080",
+      "NEXT_PUBLIC_SITE_URL": "http://localhost:3000",
+      "NEXT_PUBLIC_ORIGIN": "http://localhost:3000",
+      "NEXT_PUBLIC_RP_ID": "localhost",
+      "NEXTAUTH_URL": "http://localhost:3000",
+      "ENABLE_HEALTH_EMITTER": "true",
+      "HEALTH_EMITTER_INTERVAL_MS": "60000"
+    }
+  },
+
+  "services/auth": {
+    "local": {
+      "PORT": "8088",
+      "ENV": "local",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DB_NAME": "auth",
+      "JWT_SECRET": "QMWeE1UpmAipFuH2ZcxTWDq2xa2/UiAPzi9vXda/dfg=",
+      "JWT_ACCESS_TOKEN_EXPIRY": "1h",
+      "JWT_REFRESH_TOKEN_EXPIRY": "168h",
+      "WEBAUTHN_RP_ID": "localhost",
+      "WEBAUTHN_ORIGIN": "http://localhost:3000",
+      "WEBAUTHN_RP_NAME": "Motherboard (Local)",
+      "MAX_SESSIONS_PER_USER": "10",
+      "OAUTH_TOKEN_EXPIRY": "1h",
+      "OAUTH_DEFAULT_SCOPES": "read,write",
+      "SESSION_TOKEN_EXPIRY": "168h",
+      "USER_API_TOKEN_EXPIRY": "2160h",
+      "RATE_LIMIT_LOGIN": "5",
+      "RATE_LIMIT_OTP": "3",
+      "RATE_LIMIT_API": "100",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8088",
+      "ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DB_NAME": "auth",
+      "JWT_SECRET": "QMWeE1UpmAipFuH2ZcxTWDq2xa2/UiAPzi9vXda/dfg=",
+      "JWT_ACCESS_TOKEN_EXPIRY": "1h",
+      "JWT_REFRESH_TOKEN_EXPIRY": "168h",
+      "WEBAUTHN_RP_ID": "localhost",
+      "WEBAUTHN_ORIGIN": "http://localhost:3000",
+      "WEBAUTHN_RP_NAME": "Motherboard",
+      "MAX_SESSIONS_PER_USER": "10",
+      "OAUTH_TOKEN_EXPIRY": "1h",
+      "OAUTH_DEFAULT_SCOPES": "read,write",
+      "SESSION_TOKEN_EXPIRY": "168h",
+      "USER_API_TOKEN_EXPIRY": "2160h",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "services/billing": {
+    "local": {
+      "PORT": "8090",
+      "ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DB_NAME": "billing",
+      "RAZORPAY_PLUGIN_URL": "http://razorpay:8086",
+      "STRIPE_PLUGIN_URL": "http://stripe:8087",
+      "LOG_LEVEL": "info",
+      "JWT_SECRET": "QMWeE1UpmAipFuH2ZcxTWDq2xa2/UiAPzi9vXda/dfg="
+    },
+    "development": {
+      "PORT": "8090",
+      "ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DB_NAME": "billing",
+      "RAZORPAY_PLUGIN_URL": "http://razorpay:8086",
+      "STRIPE_PLUGIN_URL": "http://stripe:8087",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "services/notification": {
+    "local": {
+      "PORT": "8094",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard",
+      "EMAIL_PLUGIN_URL": "http://email:8081",
+      "SMS_PLUGIN_URL": "http://sms:8082",
+      "WHATSAPP_PLUGIN_URL": "http://whatsapp:8083",
+      "TELEGRAM_PLUGIN_URL": "http://telegram:8084",
+      "INTERNAL_SERVICE_SECRET": "motherboard-secret-2026",
+      "BROKER_TYPE": "rabbitmq",
+      "BROKER_URI": "amqp://guest:guest@rabbitmq:5672",
+      "WEBSOCKET_ENABLED": "true",
+      "FRONTEND_URL": "http://localhost:3000",
+      "TEMPLATE_ENGINE": "liquid",
+      "TEMPLATES_PATH": "./internal/templates",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8094",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard",
+      "EMAIL_PLUGIN_URL": "http://email:8081",
+      "SMS_PLUGIN_URL": "http://sms:8082",
+      "WHATSAPP_PLUGIN_URL": "http://whatsapp:8083",
+      "TELEGRAM_PLUGIN_URL": "http://telegram:8084",
+      "INTERNAL_SERVICE_SECRET": "motherboard-secret-2026",
+      "BROKER_TYPE": "rabbitmq",
+      "BROKER_URI": "amqp://guest:guest@rabbitmq:5672",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "services/scheduler": {
+    "local": {
+      "PORT": "8089",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "TASK_TRACKER_INTERNAL_URL": "http://task-tracker:8095",
+      "HEALTH_SERVICE_URL": "http://health:8091",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8089",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "TASK_TRACKER_INTERNAL_URL": "http://task-tracker:8095",
+      "HEALTH_SERVICE_URL": "http://health:8091",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "services/health": {
+    "local": {
+      "PORT": "8091",
+      "APP_ENV": "development",
+      "CRM_MONGODB_URI": "mongodb://mongodb:27017",
+      "CRM_DB_NAME": "motherboard",
+      "BACKEND_URL": "http://backend:8080",
+      "SCHEDULER_URL": "http://scheduler:8080",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8091",
+      "APP_ENV": "development",
+      "CRM_MONGODB_URI": "mongodb://mongodb:27017",
+      "CRM_DB_NAME": "motherboard",
+      "BACKEND_URL": "http://backend:8080",
+      "SCHEDULER_URL": "http://scheduler:8080",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "services/marketing": {
+    "local": {
+      "PORT": "8092",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard",
+      "EMAIL_PLUGIN_URL": "http://email:8081",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8092",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard",
+      "EMAIL_PLUGIN_URL": "http://email:8081",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "services/cloud-adapter": {
+    "local": {
+      "PORT": "8093",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "INTERNAL_SERVICE_SECRET": "motherboard-secret-2026",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8093",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "INTERNAL_SERVICE_SECRET": "motherboard-secret-2026",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "services/storage": {
+    "local": {
+      "PORT": "8098",
+      "ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard",
+      "S3_ENDPOINT": "http://minio:9000",
+      "S3_BUCKET": "motherboard-assets",
+      "S3_REGION": "us-east-1",
+      "S3_ACCESS_KEY": "minioadmin",
+      "S3_SECRET_KEY": "minioadmin",
+      "S3_USE_PATH_STYLE": "true",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8098",
+      "ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard",
+      "S3_ENDPOINT": "http://minio:9000",
+      "S3_BUCKET": "motherboard-assets",
+      "S3_REGION": "us-east-1",
+      "S3_ACCESS_KEY": "minioadmin",
+      "S3_SECRET_KEY": "minioadmin",
+      "S3_USE_PATH_STYLE": "true",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "services/entitlement": {
+    "local": {
+      "PORT": "8085",
+      "APP_ENV": "development",
+      "MONGO_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "JWT_SECRET": "QMWeE1UpmAipFuH2ZcxTWDq2xa2/UiAPzi9vXda/dfg=",
+      "SERVICE_NAME": "entitlement",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8085",
+      "APP_ENV": "development",
+      "MONGO_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "JWT_SECRET": "QMWeE1UpmAipFuH2ZcxTWDq2xa2/UiAPzi9vXda/dfg=",
+      "SERVICE_NAME": "entitlement",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "services/inventory-management": {
+    "local": {
+      "PORT": "8096",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard-inventory",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8096",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard-inventory",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "services/order-management": {
+    "local": {
+      "PORT": "8097",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard-orders",
+      "INVENTORY_SERVICE_URL": "http://inventory:8096",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8097",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard-orders",
+      "INVENTORY_SERVICE_URL": "http://inventory:8096",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "services/task-tracker": {
+    "local": {
+      "FLASK_PORT": "8095",
+      "FLASK_HOST": "0.0.0.0",
+      "ENVIRONMENT": "development",
+      "ENV": "development",
+      "MONGODB_CONNECTION_STRING": "mongodb://mongodb:27017",
+      "MONGODB_DATABASE_NAME": "motherboard",
+      "MOTHERBOARD_API_URL": "http://backend:8080",
+      "LOG_LEVEL": "INFO"
+    },
+    "development": {
+      "FLASK_PORT": "8095",
+      "FLASK_HOST": "0.0.0.0",
+      "ENVIRONMENT": "development",
+      "ENV": "development",
+      "MONGODB_CONNECTION_STRING": "mongodb://mongodb:27017",
+      "MONGODB_DATABASE_NAME": "motherboard",
+      "MOTHERBOARD_API_URL": "http://backend:8080",
+      "LOG_LEVEL": "INFO"
+    }
+  },
+
+  "plugins/email": {
+    "local": {
+      "PORT": "8081",
+      "APP_ENV": "development",
+      "MONGO_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "RESEND_API_KEY": "",
+      "DEFAULT_FROM_EMAIL": "noreply@motherboard.local",
+      "SERVICE_NAME": "email",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8081",
+      "APP_ENV": "development",
+      "MONGO_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "SERVICE_NAME": "email",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "plugins/sms": {
+    "local": {
+      "PORT": "8082",
+      "APP_ENV": "development",
+      "MONGO_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "SMS_PROVIDER": "twilio",
+      "TWILIO_ACCOUNT_SID": "",
+      "TWILIO_AUTH_TOKEN": "",
+      "TWILIO_FROM_NUMBER": "",
+      "SERVICE_NAME": "sms",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8082",
+      "APP_ENV": "development",
+      "MONGO_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "SMS_PROVIDER": "twilio",
+      "SERVICE_NAME": "sms",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "plugins/whatsapp": {
+    "local": {
+      "PORT": "8083",
+      "APP_ENV": "development",
+      "MONGO_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "WHATSAPP_PROVIDER": "twilio",
+      "TWILIO_ACCOUNT_SID": "",
+      "TWILIO_AUTH_TOKEN": "",
+      "TWILIO_FROM_NUMBER": "",
+      "SERVICE_NAME": "whatsapp",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8083",
+      "APP_ENV": "development",
+      "MONGO_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "WHATSAPP_PROVIDER": "twilio",
+      "SERVICE_NAME": "whatsapp",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "plugins/telegram": {
+    "local": {
+      "PORT": "8084",
+      "APP_ENV": "development",
+      "MONGO_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "TELEGRAM_BOT_TOKEN": "",
+      "TELEGRAM_WEBHOOK_URL": "",
+      "SERVICE_NAME": "telegram",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8084",
+      "APP_ENV": "development",
+      "MONGO_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "TELEGRAM_BOT_TOKEN": "",
+      "SERVICE_NAME": "telegram",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "plugins/razorpay": {
+    "local": {
+      "PORT": "8086",
+      "APP_ENV": "development",
+      "RAZORPAY_KEY_ID": "",
+      "RAZORPAY_KEY_SECRET": "",
+      "WEBHOOK_SECRET": "",
+      "SERVICE_NAME": "razorpay",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8086",
+      "APP_ENV": "development",
+      "SERVICE_NAME": "razorpay",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "plugins/stripe": {
+    "local": {
+      "PORT": "8087",
+      "APP_ENV": "development",
+      "STRIPE_KEY": "",
+      "WEBHOOK_SECRET": "",
+      "SERVICE_NAME": "stripe",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8087",
+      "APP_ENV": "development",
+      "SERVICE_NAME": "stripe",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "plugins/inventory": {
+    "local": {
+      "PORT": "8096",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard-inventory",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8096",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard-inventory",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "plugins/orders": {
+    "local": {
+      "PORT": "8097",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard-orders",
+      "INVENTORY_SERVICE_URL": "http://inventory:8096",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8097",
+      "APP_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017",
+      "DATABASE_NAME": "motherboard-orders",
+      "INVENTORY_SERVICE_URL": "http://inventory:8096",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "plugins/jhora": {
+    "local": {
+      "PORT": "3130",
+      "NODE_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "JHORA_API_URL": "http://host.docker.internal:3129",
+      "CACHE_TTL": "604800",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "3130",
+      "NODE_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "CACHE_TTL": "604800",
+      "LOG_LEVEL": "info"
+    }
+  },
+
+  "plugins/vedika": {
+    "local": {
+      "PORT": "3140",
+      "NODE_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "VEDIKA_API_URL": "https://api.vedika.io/v2/astrology",
+      "VEDIKA_API_KEY": "",
+      "CACHE_TTL": "604800",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "3140",
+      "NODE_ENV": "development",
+      "MONGODB_URI": "mongodb://mongodb:27017/motherboard",
+      "REDIS_URL": "redis://redis:6379",
+      "VEDIKA_API_URL": "https://api.vedika.io/v2/astrology",
+      "VEDIKA_API_KEY": "",
+      "CACHE_TTL": "604800",
+      "LOG_LEVEL": "info"
+    }
+  }
+}
