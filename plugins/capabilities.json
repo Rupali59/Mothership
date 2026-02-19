@@ -1,34 +1,161 @@
 [
   {
+    "id": "email",
+    "name": "Email Channel",
+    "description": "Send transactional and marketing emails via configurable providers.",
+    "category": "communication",
+    "type": "infra",
+    "entitlement_key": "channel:email",
+    "service_path": "plugins/email",
+    "providers": ["sendgrid", "aws-ses", "mailgun", "smtp"],
+    "config_schema": {
+      "provider": { "type": "string", "required": true },
+      "api_key": { "type": "string", "required": true, "sensitive": true },
+      "from_address": { "type": "string", "required": true },
+      "from_name": { "type": "string", "required": false }
+    },
+    "docs_url": "/docs/plugins/email"
+  },
+  {
+    "id": "sms",
+    "name": "SMS Channel",
+    "description": "Send SMS messages via configurable providers.",
+    "category": "communication",
+    "type": "infra",
+    "entitlement_key": "channel:sms",
+    "service_path": "plugins/sms",
+    "providers": ["twilio", "msg91", "vonage"],
+    "config_schema": {
+      "provider": { "type": "string", "required": true },
+      "api_key": { "type": "string", "required": true, "sensitive": true },
+      "auth_token": { "type": "string", "required": true, "sensitive": true },
+      "sender_id": { "type": "string", "required": true }
+    },
+    "docs_url": "/docs/plugins/sms"
+  },
+  {
+    "id": "whatsapp",
+    "name": "WhatsApp Channel",
+    "description": "Send WhatsApp messages via WhatsApp Business API.",
+    "category": "communication",
+    "type": "infra",
+    "entitlement_key": "channel:whatsapp",
+    "service_path": "plugins/whatsapp",
+    "providers": ["whatsapp-business", "360dialog"],
+    "config_schema": {
+      "provider": { "type": "string", "required": true },
+      "phone_number_id": { "type": "string", "required": true },
+      "access_token": { "type": "string", "required": true, "sensitive": true },
+      "business_id": { "type": "string", "required": true }
+    },
+    "docs_url": "/docs/plugins/whatsapp"
+  },
+  {
+    "id": "telegram",
+    "name": "Telegram Channel",
+    "description": "Send messages and handle commands via Telegram Bot API.",
+    "category": "communication",
+    "type": "infra",
+    "entitlement_key": "channel:telegram",
+    "service_path": "plugins/telegram",
+    "providers": ["telegram-bot-api"],
+    "config_schema": {
+      "bot_token": { "type": "string", "required": true, "sensitive": true },
+      "webhook_url": { "type": "string", "required": false }
+    },
+    "docs_url": "/docs/plugins/telegram"
+  },
+  {
+    "id": "razorpay",
+    "name": "Razorpay Payments",
+    "description": "Accept payments via Razorpay payment gateway.",
+    "category": "payments",
+    "type": "integration",
+    "entitlement_key": "plugin:razorpay",
+    "service_path": "plugins/razorpay",
+    "config_schema": {
+      "key_id": { "type": "string", "required": true },
+      "key_secret": { "type": "string", "required": true, "sensitive": true },
+      "webhook_secret": {
+        "type": "string",
+        "required": false,
+        "sensitive": true
+      }
+    },
+    "docs_url": "/docs/plugins/razorpay"
+  },
+  {
+    "id": "stripe",
+    "name": "Stripe Payments",
+    "description": "Accept payments via Stripe payment gateway.",
+    "category": "payments",
+    "type": "integration",
+    "entitlement_key": "plugin:stripe",
+    "service_path": "plugins/stripe",
+    "config_schema": {
+      "publishable_key": { "type": "string", "required": true },
+      "secret_key": { "type": "string", "required": true, "sensitive": true },
+      "webhook_endpoint_secret": {
+        "type": "string",
+        "required": false,
+        "sensitive": true
+      }
+    },
+    "docs_url": "/docs/plugins/stripe"
+  },
+  {
     "id": "inventory",
     "name": "Inventory Management",
     "description": "Track stock levels, manage items, and handle reservations.",
-    "category": "business",
-    "entitlement_key": "inventory",
-    "docs_url": "/docs/inventory"
+    "category": "commerce",
+    "type": "integration",
+    "entitlement_key": "plugin:inventory",
+    "service_path": "plugins/inventory",
+    "config_schema": {},
+    "docs_url": "/docs/plugins/inventory"
   },
   {
     "id": "orders",
     "name": "Order Management",
     "description": "Process and track customer orders, integrated with inventory.",
-    "category": "business",
-    "entitlement_key": "orders",
-    "docs_url": "/docs/orders"
+    "category": "commerce",
+    "type": "integration",
+    "entitlement_key": "plugin:orders",
+    "service_path": "plugins/orders",
+    "config_schema": {},
+    "docs_url": "/docs/plugins/orders"
   },
   {
     "id": "astrology-jhora",
     "name": "JHora Astrology",
     "description": "Comprehensive Vedic astrology calculations via JHora engine.",
-    "category": "astrology",
-    "entitlement_key": "astrology-jhora",
+    "category": "verticals",
+    "type": "integration",
+    "entitlement_key": "plugin:astrology-jhora",
+    "service_path": "plugins/jhora",
+    "config_schema": {
+      "jhora_api_url": { "type": "string", "required": true },
+      "cache_ttl": { "type": "number", "required": false }
+    },
     "docs_url": "/plugins/verticals/astrology/jhora/docs/architecture"
   },
   {
     "id": "astrology-vedika",
     "name": "Vedika Astrology",
     "description": "Modern Vedic astrology calculations via Vedika.io Intelligence API.",
-    "category": "astrology",
-    "entitlement_key": "astrology-vedika",
+    "category": "verticals",
+    "type": "integration",
+    "entitlement_key": "plugin:astrology-vedika",
+    "service_path": "plugins/vedika",
+    "config_schema": {
+      "vedika_api_url": { "type": "string", "required": true },
+      "vedika_api_key": {
+        "type": "string",
+        "required": true,
+        "sensitive": true
+      },
+      "cache_ttl": { "type": "number", "required": false }
+    },
     "docs_url": "/plugins/verticals/astrology/vedika/docs/architecture"
   }
 ]

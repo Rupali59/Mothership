@@ -70,46 +70,103 @@ check_requirements() {
 }
 
 validate_env() {
-    if [[ "$ENV" != "local" && "$ENV" != "production" ]]; then
+    if [[ "$ENV" != "local" && "$ENV" != "preview" && "$ENV" != "production" ]]; then
         print_error "Invalid environment: $ENV"
-        echo "Usage: ./deploy.sh [local|production] [command]"
+        echo "Usage: ./deploy.sh [local|preview|production] [command]"
         exit 1
     fi
 }
 
-check_env_files() {
-    print_info "Checking environment files for $ENV..."
-    
-    local missing_files=()
-    
-    # Core services
-    if [[ ! -f "./apps/core-server/.env.$ENV" ]]; then
-        missing_files+=("./apps/core-server/.env.$ENV")
-    fi
-    
-    if [[ ! -f "./apps/admin-dashboard/.env.$ENV" ]]; then
-        missing_files+=("./apps/admin-dashboard/.env.$ENV")
-    fi
-    
-    if [[ ${#missing_files[@]} -gt 0 ]]; then
-        print_warning "Missing environment files:"
-        for file in "${missing_files[@]}"; do
-            echo "  - $file"
-        done
-        print_info "Creating from .env.example files..."
-        
-        # Create missing files from examples if they exist
-        for file in "${missing_files[@]}"; do
-            local example_file="${file%.env.*}/.env.example"
-            if [[ -f "$example_file" ]]; then
-                cp "$example_file" "$file"
-                print_success "Created $file from $example_file"
-                print_warning "Please update $file with your actual values!"
-            fi
-        done
+# check_go returns 0 if Go toolchain is available.
+check_go() {
+    command -v go &> /dev/null
+}
+
+# wait_for_mongodb polls until the MongoDB container reports healthy or times out.
+wait_for_mongodb() {
+    local max_wait=90
+    local elapsed=0
+    printf "  Waiting for MongoDB"
+    while [ $elapsed -lt $max_wait ]; do
+        local status
+        status=$(docker inspect --format='{{.State.Health.Status}}' motherboard-mongodb 2>/dev/null || echo "not_found")
+        if [ "$status" = "healthy" ]; then
+            echo ""
+            print_success "MongoDB is healthy"
+            return 0
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+        printf "."
+    done
+    echo ""
+    print_error "MongoDB did not become healthy within ${max_wait}s"
+    exit 1
+}
+
+# bootstrap_config seeds MongoDB and generates per-service env files.
+#
+#   Phase 1  — start infra only (mongodb, redis, minio) and wait for healthy
+#   Phase 2  — seed entity_configs.json into MongoDB (cmd/seed-config)
+#   Phase 2b — sync ports.json into MongoDB (cmd/port-registry sync)
+#   Phase 2c — generate .ports.env from ports.json (cmd/gen-ports-env)
+#   Phase 3  — write per-service .env.$ENV files from MongoDB (cmd/gen-env --force)
+#   Phase 4  — validate required env vars exist in generated files
+#
+bootstrap_config() {
+    print_info "Phase 1 — Starting infrastructure services..."
+    if [[ "$ENV" == "local" ]]; then
+        docker-compose -f docker-compose.yml -f docker-compose.local.yml up mongodb redis minio -d
     else
-        print_success "All environment files present"
+        docker-compose -f docker-compose.yml -f docker-compose.prod.yml up mongodb redis minio -d
     fi
+
+    wait_for_mongodb
+
+    if ! check_go; then
+        print_warning "Go is not installed — skipping seed and gen-env phases."
+        print_warning "Install Go from https://go.dev/dl/ then run: ./deploy.sh $ENV setup"
+        print_warning "Existing .env files will be used if already present."
+        return 0
+    fi
+
+    print_info "Phase 2 — Seeding entity configs into MongoDB..."
+    MONGODB_URI=mongodb://localhost:27017 go run ./cmd/seed-config || {
+        print_error "seed-config failed — check MongoDB and seeds/data/global/entity_configs.json"
+        exit 1
+    }
+    print_success "Entity configs seeded"
+
+    print_info "Phase 2b — Syncing port registry into MongoDB..."
+    MONGODB_URI=mongodb://localhost:27017 go run ./cmd/port-registry sync || {
+        print_error "port-registry sync failed"
+        exit 1
+    }
+    print_success "Port registry synced"
+
+    print_info "Phase 2c — Generating .ports.env from ports.json..."
+    go run ./cmd/gen-ports-env || {
+        print_error "gen-ports-env failed"
+        exit 1
+    }
+    print_success ".ports.env generated"
+
+    print_info "Phase 2d — Validating docker-compose config..."
+    if docker compose config --quiet 2>/dev/null; then
+        print_success "Docker Compose config is valid"
+    else
+        print_warning "Docker Compose config validation failed — .ports.env vars may not resolve. Continuing anyway."
+    fi
+
+    print_info "Phase 3 — Generating per-service .env.$ENV files from MongoDB..."
+    MONGODB_URI=mongodb://localhost:27017 go run ./cmd/gen-env --env "$ENV" --force || {
+        print_error "gen-env failed — run: MONGODB_URI=mongodb://localhost:27017 go run ./cmd/gen-env --dry-run"
+        exit 1
+    }
+    print_success "Environment files generated (.env.$ENV per service)"
+
+    print_info "Phase 4 — Validating required environment variables..."
+    validate_env_files
 }
 
 build_images() {
@@ -124,13 +181,81 @@ build_images() {
     print_success "Images built successfully"
 }
 
+# ensure_ports_env generates .ports.env if it doesn't exist.
+# This guards against running `docker compose up` directly without deploy.sh.
+ensure_ports_env() {
+    if [[ ! -f ".ports.env" ]]; then
+        print_warning ".ports.env not found — generating from ports.json..."
+        if check_go; then
+            go run ./cmd/gen-ports-env || {
+                print_error "Failed to generate .ports.env — run: go run ./cmd/gen-ports-env"
+                exit 1
+            }
+            print_success ".ports.env generated"
+        else
+            print_error ".ports.env is missing and Go is not installed to generate it."
+            print_error "Either install Go or manually create .ports.env"
+            exit 1
+        fi
+    fi
+}
+
+# validate_env_files checks that critical env vars are present in generated files.
+validate_env_files() {
+    local errors=0
+
+    # Frontend must have HEALTH_SERVICE_URL
+    if [[ -f "apps/frontend/.env.$ENV" ]]; then
+        if ! grep -q "HEALTH_SERVICE_URL" "apps/frontend/.env.$ENV"; then
+            print_warning "apps/frontend/.env.$ENV is missing HEALTH_SERVICE_URL"
+            errors=$((errors + 1))
+        fi
+    elif [[ -f "apps/frontend/.env.local" ]]; then
+        if ! grep -q "HEALTH_SERVICE_URL" "apps/frontend/.env.local"; then
+            print_warning "apps/frontend/.env.local is missing HEALTH_SERVICE_URL"
+            errors=$((errors + 1))
+        fi
+    fi
+
+    # Backend must have service URLs
+    local backend_env="apps/core-server/.env.$ENV"
+    [[ ! -f "$backend_env" ]] && backend_env="apps/core-server/.env.local"
+    if [[ -f "$backend_env" ]]; then
+        for var in HEALTH_SERVICE_URL AUTH_SERVICE_URL BILLING_SERVICE_URL; do
+            if ! grep -q "$var" "$backend_env"; then
+                print_warning "$backend_env is missing $var"
+                errors=$((errors + 1))
+            fi
+        done
+    fi
+
+    # .ports.env must have all port assignments
+    if [[ -f ".ports.env" ]]; then
+        for var in BACKEND_PORT FRONTEND_PORT HEALTH_PORT AUTH_PORT; do
+            if ! grep -q "$var" ".ports.env"; then
+                print_warning ".ports.env is missing $var"
+                errors=$((errors + 1))
+            fi
+        done
+    fi
+
+    if [[ $errors -gt 0 ]]; then
+        print_warning "$errors env validation warning(s) found — services may not start correctly"
+    else
+        print_success "All required environment variables validated"
+    fi
+}
+
 ###############################################################################
 # Main Deployment Functions
 ###############################################################################
 
 deploy_local() {
     print_info "Deploying LOCAL environment..."
-    
+
+    # Ensure .ports.env exists before docker compose reads it
+    ensure_ports_env
+
     # Use base docker-compose.yml and local override
     docker-compose -f docker-compose.yml -f docker-compose.local.yml $COMMAND $EXTRA_ARGS
     
@@ -149,7 +274,10 @@ deploy_local() {
 
 deploy_production() {
     print_info "Deploying PRODUCTION environment..."
-    
+
+    # Ensure .ports.env exists before docker compose reads it
+    ensure_ports_env
+
     # Use both base and production override
     docker-compose -f docker-compose.yml -f docker-compose.prod.yml $COMMAND $EXTRA_ARGS
     
@@ -167,10 +295,33 @@ deploy_production() {
     fi
 }
 
+deploy_preview() {
+    print_info "Deploying PREVIEW environment..."
+
+    # Ensure .ports.env exists before docker compose reads it
+    ensure_ports_env
+
+    # Use base + preview override
+    docker-compose -f docker-compose.yml -f docker-compose.preview.yml $COMMAND $EXTRA_ARGS
+
+    if [[ "$COMMAND" == "up" ]]; then
+        echo ""
+        print_success "Preview environment started!"
+        print_info "Access your services at:"
+        echo "  - Frontend:  http://localhost (via Nginx)"
+        echo "  - Backend:   http://localhost:8080"
+        echo ""
+        print_info "View logs: ./deploy.sh preview logs"
+        print_info "Stop:      ./deploy.sh preview down"
+    fi
+}
+
 show_status() {
     print_info "Container Status:"
     if [[ "$ENV" == "local" ]]; then
         docker-compose -f docker-compose.yml -f docker-compose.local.yml ps
+    elif [[ "$ENV" == "preview" ]]; then
+        docker-compose -f docker-compose.yml -f docker-compose.preview.yml ps
     else
         docker-compose -f docker-compose.yml -f docker-compose.prod.yml ps
     fi
@@ -179,18 +330,19 @@ show_status() {
 show_logs() {
     local service="${EXTRA_ARGS}"
     
+    local compose_files
     if [[ "$ENV" == "local" ]]; then
-        if [[ -n "$service" ]]; then
-            docker-compose -f docker-compose.yml -f docker-compose.local.yml logs -f $service
-        else
-            docker-compose -f docker-compose.yml -f docker-compose.local.yml logs -f
-        fi
+        compose_files="-f docker-compose.yml -f docker-compose.local.yml"
+    elif [[ "$ENV" == "preview" ]]; then
+        compose_files="-f docker-compose.yml -f docker-compose.preview.yml"
     else
-        if [[ -n "$service" ]]; then
-            docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs -f $service
-        else
-            docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs -f
-        fi
+        compose_files="-f docker-compose.yml -f docker-compose.prod.yml"
+    fi
+
+    if [[ -n "$service" ]]; then
+        docker-compose $compose_files logs -f $service
+    else
+        docker-compose $compose_files logs -f
     fi
 }
 
@@ -257,8 +409,13 @@ case "$COMMAND" in
         backup_database
         exit 0
         ;;
+    setup)
+        bootstrap_config
+        print_success "Bootstrap complete. Run './deploy.sh $ENV up' to start all services."
+        exit 0
+        ;;
     build)
-        check_env_files
+        bootstrap_config
         build_images
         exit 0
         ;;
@@ -268,8 +425,8 @@ case "$COMMAND" in
         ;;
 esac
 
-# Check environment files
-check_env_files
+# Bootstrap: seed MongoDB and generate per-service env files
+bootstrap_config
 
 # Deploy based on environment
 print_info "Environment: $ENV"
@@ -278,6 +435,8 @@ echo ""
 
 if [[ "$ENV" == "local" ]]; then
     deploy_local
+elif [[ "$ENV" == "preview" ]]; then
+    deploy_preview
 else
     deploy_production
 fi
