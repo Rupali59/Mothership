@@ -1,0 +1,169 @@
+# Minimal core compose: redis, minio, mongodb, auth, health, backend, frontend
+# Used when chaukidar/scheduler Dockerfiles are absent (run ./scripts/setup-repos.sh for full stack)
+# Usage: docker-compose -f docker-compose.core.yml -f docker-compose.core.local.yml up
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: motherboard-redis
+    networks:
+      - motherboard-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  minio:
+    image: minio/minio:latest
+    container_name: motherboard-minio
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    networks:
+      - motherboard-network
+
+  mongodb:
+    image: mongo:7.0
+    container_name: motherboard-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: motherboard
+    networks:
+      - motherboard-network
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/motherboard --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  auth:
+    build:
+      context: .
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: services/auth
+    container_name: motherboard-auth
+    environment:
+      - PORT=8088
+      - APP_ENV=${APP_ENV:-development}
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DB_NAME=auth
+      - JWT_SECRET=${JWT_SECRET:-test-jwt-secret-must-be-very-long-and-secure}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    env_file:
+      - path: ./services/auth/.env.local
+        required: false
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8088/readyz" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  health:
+    build:
+      context: .
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: services/health
+        MAIN_PATH: .
+    container_name: motherboard-health
+    environment:
+      - PORT=8091
+      - APP_ENV=${APP_ENV:-development}
+      - BACKEND_URL=http://backend:8080
+      - SCHEDULER_URL=http://scheduler:8080
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    env_file:
+      - path: ./services/health/.env.local
+        required: false
+    networks:
+      - motherboard-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: apps/motherboard/backend
+        MAIN_PATH: main.go
+    container_name: motherboard-backend
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - CRM_MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=motherboard
+      - PORTS_REGISTRY_PATH=mongodb
+      - REDIS_URL=redis://redis:6379
+      - JHORA_SERVICE_URL=${JHORA_SERVICE_URL:-http://jhora:3130}
+      - VEDIKA_SERVICE_URL=${VEDIKA_SERVICE_URL:-http://vedika:3140}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:4020}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    ports:
+      - "8080:8080"
+    env_file:
+      - path: ./.config/global/.ports.env
+        required: true
+      - path: ./apps/motherboard/backend/.env.local
+        required: false
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      health:
+        condition: service_started
+    networks:
+      - motherboard-network
+    stop_grace_period: 30s
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8080/readyz" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./apps/motherboard/frontend
+      dockerfile: ../../../docker/node.Dockerfile
+    container_name: motherboard-frontend
+    environment:
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=${NEXT_PUBLIC_MOTHERBOARD_API_URL:-http://localhost:8080}
+      - NEXTAUTH_URL=${FRONTEND_URL:-http://localhost:4020}
+      - NODE_ENV=${NODE_ENV:-development}
+    env_file:
+      - path: ./.config/global/.ports.env
+        required: true
+      - path: ./apps/motherboard/frontend/.env.local
+        required: false
+    depends_on:
+      - backend
+    networks:
+      - motherboard-network
+    stdin_open: true
+    tty: true
+
+networks:
+  motherboard-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local

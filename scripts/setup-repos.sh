@@ -32,8 +32,8 @@ clone_repo() {
 # (Current repo is Mothership, so no need to clone itself)
 
 # --- Core Apps ---
-clone_repo "apps/core-server" "https://github.com/Rupali59/Motherboard-server.git"
-clone_repo "apps/core-frontend" "https://github.com/Rupali59/MotherBoard.git"
+clone_repo "apps/motherboard/backend" "https://github.com/Rupali59/Motherboard-server.git"
+clone_repo "apps/motherboard/frontend" "https://github.com/Rupali59/MotherBoard.git"
 
 # --- Services ---
 clone_repo "services/auth" "https://github.com/Rupali59/Motherboard-auth-service.git"

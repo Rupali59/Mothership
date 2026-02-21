@@ -23,8 +23,18 @@ const (
 )
 
 func main() {
-	// Load .env file if exists
-	_ = godotenv.Load()
+	// Load .env file from aggregated location or root
+	for _, p := range []string{
+		".config/global/.env.local",
+		".config/global/.env",
+		".env.local",
+		".env",
+	} {
+		if _, err := os.Stat(p); err == nil {
+			_ = godotenv.Load(p)
+			break
+		}
+	}
 
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI == "" {

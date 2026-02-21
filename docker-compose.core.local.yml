@@ -1,0 +1,63 @@
+# Local overrides for docker-compose.core.yml
+# Used when chaukidar/scheduler are absent
+
+services:
+  redis:
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_local:/data
+
+  minio:
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data_local:/data
+
+  mongodb:
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data_local:/data/db
+
+  auth:
+    ports:
+      - "8088:8088"
+    environment:
+      - APP_ENV=development
+
+  health:
+    ports:
+      - "8091:8091"
+    environment:
+      - APP_ENV=development
+      - LOG_LEVEL=debug
+      - SCHEDULER_URL=
+
+  backend:
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENV=development
+      - LOG_LEVEL=debug
+
+  frontend:
+    build:
+      target: development
+    ports:
+      - "3000:4020"
+    environment:
+      - NODE_ENV=development
+      - API_URL=http://backend:8080
+      - MOTHERBOARD_API_URL=http://backend:8080
+      - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
+    volumes:
+      - ./apps/motherboard/frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+volumes:
+  redis_data_local:
+  minio_data_local:
+  mongodb_data_local:

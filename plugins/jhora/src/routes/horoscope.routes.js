@@ -1,13 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const horoscopeController = require("../controllers/horoscope.controller");
-// const { validateBirthDetails } = require('../utils/validators'); // TODO: Implement validator
-
 const { validateMotherboardToken } = require("../middleware/auth");
+const { pluginConfigMiddleware } = require("../middleware/plugin-config");
+const { astrologyValidationMiddleware } = require("../middleware/astrology-validation");
 
 router.post(
   "/generate",
   validateMotherboardToken,
+  pluginConfigMiddleware,
+  astrologyValidationMiddleware,
   horoscopeController.generateHoroscope,
 );
 router.get(

@@ -1,0 +1,48 @@
+# Debug Dockerfile for Go services — runs under Delve for remote debugging
+# Usage: docker-compose -f ... -f docker-compose.local.debug.yml up backend
+# Attach from host: dlv connect localhost:2345 or VS Code "Attach to Backend (Docker)"
+
+# Stage 1: Build (same as go.Dockerfile)
+FROM golang:1.25-alpine AS builder
+
+RUN apk add --no-cache git gcc musl-dev
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+COPY libs/ libs/
+COPY pkg/ pkg/
+COPY apps/ apps/
+COPY services/ services/
+
+ARG SERVICE_PATH
+ARG MAIN_PATH=cmd/server/main.go
+
+ENV GOWORK=off
+
+WORKDIR /app/${SERVICE_PATH}
+RUN go mod download
+
+RUN set -e && \
+    if [ "${MAIN_PATH}" = "." ]; then \
+      CGO_ENABLED=0 GOOS=linux go build -mod=mod -v -p 1 -o /bin/service .; \
+    else \
+      CGO_ENABLED=0 GOOS=linux go build -mod=mod -v -p 1 -o /bin/service ./${MAIN_PATH}; \
+    fi
+
+# Stage 2: Debug runtime — use full golang image for Delve
+FROM golang:1.25
+
+# Install Delve
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+WORKDIR /app
+
+COPY --from=builder /bin/service /app/service
+
+ENV APP_ENV=development
+
+EXPOSE 8080 2345
+
+# Run service under Delve; --headless allows remote attach
+ENTRYPOINT ["/root/go/bin/dlv", "exec", "--headless", "--listen=:2345", "--api-version=2", "--accept-multiclient", "/app/service"]

@@ -46,34 +46,28 @@ services:
   backend:
     build:
       context: .
-      dockerfile: apps/core-server/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: apps/motherboard/backend
+        MAIN_PATH: main.go
     container_name: motherboard-backend
     environment:
-      - PORT=${BACKEND_PORT}
       - APP_ENV=${APP_ENV:-development}
       - CRM_MONGODB_URI=mongodb://mongodb:27017
       - DATABASE_NAME=motherboard
-      - EMAIL_PLUGIN_URL=${EMAIL_SERVICE_URL}
-      - SMS_PLUGIN_URL=${SMS_SERVICE_URL}
-      - WHATSAPP_PLUGIN_URL=${WHATSAPP_SERVICE_URL}
-      - TELEGRAM_PLUGIN_URL=${TELEGRAM_SERVICE_URL}
-      - BILLING_SERVICE_URL=${BILLING_SERVICE_URL}
       - PORTS_REGISTRY_PATH=mongodb
       - REDIS_URL=redis://redis:6379
-      - HEALTH_SERVICE_URL=${HEALTH_SERVICE_URL}
-      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
-      - ENTITLEMENT_SERVICE_URL=${ENTITLEMENT_SERVICE_URL}
       - JHORA_SERVICE_URL=${JHORA_SERVICE_URL:-http://jhora:3130}
       - VEDIKA_SERVICE_URL=${VEDIKA_SERVICE_URL:-http://vedika:3140}
-      - MARKETING_SERVICE_URL=${MARKETING_SERVICE_URL}
-      - CLOUD_ADAPTER_URL=${CLOUD_ADAPTER_SERVICE_URL}
-      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL}
-      - STORAGE_SERVICE_URL=${STORAGE_SERVICE_URL}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:4020}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+    ports:
+      - "8080:8080"
     env_file:
-      - ./.ports.env
-      - ./apps/core-server/.env.local
+      - path: ./.config/global/.ports.env
+        required: true
+      - path: ./apps/motherboard/backend/.env.local
+        required: false
     depends_on:
       mongodb:
         condition: service_healthy
@@ -95,18 +89,18 @@ services:
 
   frontend:
     build:
-      context: ./apps/frontend
-      dockerfile: Dockerfile
+      context: ./apps/motherboard/frontend
+      dockerfile: ../../../docker/node.Dockerfile
     container_name: motherboard-frontend
     environment:
-      - PORT=${FRONTEND_PORT}
       - NEXT_PUBLIC_MOTHERBOARD_API_URL=${NEXT_PUBLIC_MOTHERBOARD_API_URL:-http://localhost:8080}
-      - NEXTAUTH_URL=${FRONTEND_URL:-http://localhost:3000}
+      - NEXTAUTH_URL=${FRONTEND_URL:-http://localhost:4020}
       - NODE_ENV=${NODE_ENV:-development}
-      - HEALTH_SERVICE_URL=${HEALTH_SERVICE_URL}
     env_file:
-      - ./.ports.env
-      - ./apps/frontend/.env.local
+      - path: ./.config/global/.ports.env
+        required: true
+      - path: ./apps/motherboard/frontend/.env.local
+        required: false
     depends_on:
       - backend
     networks:
@@ -144,11 +138,12 @@ services:
       - DATABASE_NAME=motherboard
       - REDIS_URL=redis://redis:6379
       - TASK_TRACKER_INTERNAL_URL=http://task-tracker:8095
-      - HEALTH_SERVICE_URL=${HEALTH_SERVICE_URL}
       - LOG_LEVEL=${LOG_LEVEL:-info}
     env_file:
-      - ./.ports.env
-      - ./services/scheduler/.env.local
+      - path: ./.config/global/.ports.env
+        required: true
+      - path: ./services/scheduler/.env.local
+        required: false
     depends_on:
       mongodb:
         condition: service_healthy
@@ -163,7 +158,9 @@ services:
   auth:
     build:
       context: .
-      dockerfile: services/auth/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: services/auth
     container_name: motherboard-auth
     environment:
       - PORT=8088
@@ -173,7 +170,8 @@ services:
       - JWT_SECRET=${JWT_SECRET:-test-jwt-secret-must-be-very-long-and-secure}
       - LOG_LEVEL=${LOG_LEVEL:-info}
     env_file:
-      - ./services/auth/.env.local
+      - path: ./services/auth/.env.local
+        required: false
     depends_on:
       mongodb:
         condition: service_healthy
@@ -190,7 +188,9 @@ services:
   entitlement:
     build:
       context: .
-      dockerfile: services/entitlement/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: services/entitlement
     container_name: motherboard-entitlement
     environment:
       - PORT=8085
@@ -212,7 +212,9 @@ services:
   billing:
     build:
       context: .
-      dockerfile: services/billing/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: services/billing
     container_name: motherboard-billing
     environment:
       - PORT=8090
@@ -223,7 +225,8 @@ services:
       - STRIPE_PLUGIN_URL=http://stripe:8087
       - LOG_LEVEL=${LOG_LEVEL:-info}
     env_file:
-      - ./services/billing/.env.local
+      - path: ./services/billing/.env.local
+        required: false
     depends_on:
       mongodb:
         condition: service_healthy
@@ -240,7 +243,10 @@ services:
   health:
     build:
       context: .
-      dockerfile: services/health/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: services/health
+        MAIN_PATH: .
     container_name: motherboard-health
     environment:
       - PORT=8091
@@ -249,27 +255,33 @@ services:
       - SCHEDULER_URL=http://scheduler:8080
       - LOG_LEVEL=${LOG_LEVEL:-info}
     env_file:
-      - ./services/health/.env.local
+      - path: ./services/health/.env.local
+        required: false
     networks:
       - motherboard-network
 
   marketing:
     build:
       context: .
-      dockerfile: services/marketing/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: services/marketing
     container_name: motherboard-marketing
     environment:
       - PORT=8092
       - APP_ENV=${APP_ENV:-development}
     env_file:
-      - ./services/marketing/.env.local
+      - path: ./services/marketing/.env.local
+        required: false
     networks:
       - motherboard-network
 
   cloud-adapter:
     build:
       context: .
-      dockerfile: services/cloud-adapter/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: services/cloud-adapter
     container_name: motherboard-cloud-adapter
     environment:
       - PORT=8093
@@ -277,14 +289,17 @@ services:
       - MONGODB_URI=mongodb://mongodb:27017
       - INTERNAL_SERVICE_SECRET=${INTERNAL_SERVICE_SECRET:-motherboard-secret-2026}
     env_file:
-      - ./services/cloud-adapter/.env.local
+      - path: ./services/cloud-adapter/.env.local
+        required: false
     networks:
       - motherboard-network
 
   notification:
     build:
       context: .
-      dockerfile: services/notification/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: services/notification
     container_name: motherboard-notification
     environment:
       - PORT=8094
@@ -300,7 +315,8 @@ services:
       - BROKER_TYPE=rabbitmq
       - BROKER_URI=amqp://guest:guest@rabbitmq:5672
     env_file:
-      - ./services/notification/.env.local
+      - path: ./services/notification/.env.local
+        required: false
     depends_on:
       mongodb:
         condition: service_healthy
@@ -319,7 +335,9 @@ services:
   storage:
     build:
       context: .
-      dockerfile: services/storage/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: services/storage
     container_name: motherboard-storage
     environment:
       - PORT=8098
@@ -350,7 +368,9 @@ services:
   inventory:
     build:
       context: .
-      dockerfile: plugins/inventory/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: plugins/inventory
     container_name: motherboard-inventory
     environment:
       - PORT=8096
@@ -358,7 +378,8 @@ services:
       - MONGODB_URI=mongodb://mongodb:27017
       - DATABASE_NAME=motherboard-inventory
     env_file:
-      - ./services/inventory-management/.env.local
+      - path: ./services/inventory-management/.env.local
+        required: false
     depends_on:
       mongodb:
         condition: service_healthy
@@ -375,7 +396,9 @@ services:
   orders:
     build:
       context: .
-      dockerfile: plugins/orders/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: plugins/orders
     container_name: motherboard-orders
     environment:
       - PORT=8097
@@ -384,7 +407,8 @@ services:
       - DATABASE_NAME=motherboard-orders
       - INVENTORY_SERVICE_URL=http://inventory:8096
     env_file:
-      - ./services/order-management/.env.local
+      - path: ./services/order-management/.env.local
+        required: false
     depends_on:
       mongodb:
         condition: service_healthy
@@ -406,14 +430,17 @@ services:
   email:
     build:
       context: .
-      dockerfile: plugins/email/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: plugins/email
     container_name: motherboard-email
     environment:
       - PORT=8081
       - APP_ENV=${APP_ENV:-development}
       - RESEND_API_KEY=${RESEND_API_KEY:-dummy_key}
     env_file:
-      - ./plugins/email/.env.local
+      - path: ./plugins/email/.env.local
+        required: false
     networks:
       - motherboard-network
     stop_grace_period: 30s
@@ -427,7 +454,9 @@ services:
   sms:
     build:
       context: .
-      dockerfile: plugins/sms/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: plugins/sms
     container_name: motherboard-sms
     environment:
       - PORT=8082
@@ -436,7 +465,8 @@ services:
       - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-dummy_sid}
       - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-dummy_token}
     env_file:
-      - ./plugins/sms/.env.local
+      - path: ./plugins/sms/.env.local
+        required: false
     networks:
       - motherboard-network
     stop_grace_period: 30s
@@ -450,7 +480,9 @@ services:
   whatsapp:
     build:
       context: .
-      dockerfile: plugins/whatsapp/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: plugins/whatsapp
     container_name: motherboard-whatsapp
     environment:
       - PORT=8083
@@ -459,7 +491,8 @@ services:
       - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-dummy_sid}
       - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-dummy_token}
     env_file:
-      - ./plugins/whatsapp/.env.local
+      - path: ./plugins/whatsapp/.env.local
+        required: false
     networks:
       - motherboard-network
     stop_grace_period: 30s
@@ -473,13 +506,16 @@ services:
   telegram:
     build:
       context: .
-      dockerfile: plugins/telegram/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: plugins/telegram
     container_name: motherboard-telegram
     environment:
       - PORT=8084
       - APP_ENV=${APP_ENV:-development}
     env_file:
-      - ./plugins/telegram/.env.local
+      - path: ./plugins/telegram/.env.local
+        required: false
     networks:
       - motherboard-network
     stop_grace_period: 30s
@@ -493,13 +529,16 @@ services:
   razorpay:
     build:
       context: .
-      dockerfile: plugins/razorpay/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: plugins/razorpay
     container_name: motherboard-razorpay
     environment:
       - PORT=8086
       - APP_ENV=${APP_ENV:-development}
     env_file:
-      - ./plugins/razorpay/.env.local
+      - path: ./plugins/razorpay/.env.local
+        required: false
     networks:
       - motherboard-network
     stop_grace_period: 30s
@@ -513,13 +552,16 @@ services:
   stripe:
     build:
       context: .
-      dockerfile: plugins/stripe/Dockerfile
+      dockerfile: docker/go.Dockerfile
+      args:
+        SERVICE_PATH: plugins/stripe
     container_name: motherboard-stripe
     environment:
       - PORT=8087
       - APP_ENV=${APP_ENV:-development}
     env_file:
-      - ./plugins/stripe/.env.local
+      - path: ./plugins/stripe/.env.local
+        required: false
     networks:
       - motherboard-network
     stop_grace_period: 30s
@@ -533,7 +575,7 @@ services:
   jhora:
     build:
       context: ./plugins/jhora
-      dockerfile: Dockerfile
+      dockerfile: ../../docker/node.Dockerfile
     container_name: motherboard-jhora
     environment:
       - PORT=3130
@@ -558,7 +600,7 @@ services:
   vedika:
     build:
       context: ./plugins/vedika
-      dockerfile: Dockerfile
+      dockerfile: ../../docker/node.Dockerfile
     container_name: motherboard-vedika
     environment:
       - PORT=3140

@@ -28,8 +28,8 @@
     }
   },
   "assignments": {
-    "apps/core-server": 8080,
-    "apps/frontend": 3000,
+    "apps/motherboard/backend": 8080,
+    "apps/motherboard/frontend": 3000,
     "plugins/email": 8081,
     "plugins/sms": 8082,
     "plugins/whatsapp": 8083,
@@ -44,8 +44,32 @@
     "services/marketing": 8092,
     "services/cloud-adapter": 8093,
     "services/notification": 8094,
+    "services/task-tracker": 8095,
     "plugins/inventory": 8096,
     "plugins/orders": 8097,
-    "services/storage": 8098
+    "services/storage": 8098,
+    "services/infrastructure": 8099,
+    "plugins/jhora": 3130,
+    "plugins/vedika": 3140
+  },
+  "debug_assignments": {
+    "apps/motherboard/backend": 2345,
+    "services/auth": 2346,
+    "services/health": 2347,
+    "services/billing": 2348,
+    "services/entitlement": 2349,
+    "services/notification": 2350,
+    "services/storage": 2351,
+    "services/cloud-adapter": 2352,
+    "services/marketing": 2353,
+    "services/scheduler": 2354,
+    "plugins/inventory": 2355,
+    "plugins/orders": 2356,
+    "plugins/email": 2357,
+    "plugins/sms": 2358,
+    "plugins/whatsapp": 2359,
+    "plugins/telegram": 2360,
+    "plugins/razorpay": 2361,
+    "plugins/stripe": 2362
   }
 }

@@ -2,11 +2,13 @@ go 1.25.5
 
 use (
 	.
-	./apps/core-server
-	./apps/core-server/internal/config
+	./apps/motherboard/backend
+	./apps/motherboard/backend/internal/config
 	./infrastructure/queue
 	./libs/common
 	./libs/comms-sdk
+	./pkg/bootstrapping
+	./pkg/storage
 	./pkg/lifecycle
 	./plugins/email
 	./plugins/inventory
@@ -22,9 +24,9 @@ use (
 	./services/cloud-adapter
 	./services/entitlement
 	./services/health
+	./services/inventory-management
 	./services/marketing
 	./services/notification
 	./services/scheduler
 	./services/storage
-	./services/inventory-management
 )

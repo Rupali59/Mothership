@@ -74,25 +74,25 @@ services:
       dockerfile: docker/Dockerfile.platform
     container_name: motherboard
     ports:
-      - "8080:8080"   # backend
-      - "3000:3000"   # frontend
-      - "8081:8081"   # email
-      - "8082:8082"   # sms
-      - "8083:8083"   # whatsapp
-      - "8084:8084"   # telegram
-      - "8085:8085"   # entitlement
-      - "8086:8086"   # razorpay
-      - "8087:8087"   # stripe
-      - "8090:8090"   # billing
-      - "8091:8091"   # health
-      - "8092:8092"   # marketing
-      - "8093:8093"   # cloud-adapter
-      - "8094:8094"   # notification
-      - "8096:8096"   # inventory
-      - "8097:8097"   # orders
-      - "8098:8098"   # storage
-      - "3130:3130"   # jhora
-      - "3140:3140"   # vedika
+      - "8080:8080" # backend
+      - "3000:3000" # frontend
+      - "8081:8081" # email
+      - "8082:8082" # sms
+      - "8083:8083" # whatsapp
+      - "8084:8084" # telegram
+      - "8085:8085" # entitlement
+      - "8086:8086" # razorpay
+      - "8087:8087" # stripe
+      - "8090:8090" # billing
+      - "8091:8091" # health
+      - "8092:8092" # marketing
+      - "8093:8093" # cloud-adapter
+      - "8094:8094" # notification
+      - "8096:8096" # inventory
+      - "8097:8097" # orders
+      - "8098:8098" # storage
+      - "3130:3130" # jhora
+      - "3140:3140" # vedika
     environment:
       # Common
       - APP_ENV=${APP_ENV:-development}
@@ -126,17 +126,27 @@ services:
       - STRIPE_PLUGIN_URL=http://localhost:8087
       - INVENTORY_SERVICE_URL=http://localhost:8096
       - BACKEND_URL=http://localhost:8080
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
-      # Astrology
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:4020}
+      # Astrology (API keys from MongoDB plugin_config at request time; no build-time env)
       - JHORA_API_URL=${JHORA_API_URL:-http://host.docker.internal:3129}
       - VEDIKA_API_URL=${VEDIKA_API_URL:-https://api.vedika.io/v2/astrology}
-      - VEDIKA_API_KEY=${VEDIKA_API_KEY}
       - CACHE_TTL=604800
+      - WEBAUTHN_ORIGIN=${WEBAUTHN_ORIGIN:-http://localhost:4020}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:4020}
+      - APP_URL=${APP_URL:-http://localhost:4021}
+      # Twilio (for SMS and WhatsApp)
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-your_twilio_account_sid_here}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-your_twilio_auth_token_here}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER:-+1234567890}
+      - SMS_PROVIDER=${SMS_PROVIDER:-twilio}
+      - WHATSAPP_PROVIDER=${WHATSAPP_PROVIDER:-twilio}
       # Billing DB
       - DB_NAME=billing
     env_file:
-      - path: ./.env
+      - path: ./.env.monolith
         required: false
+    volumes:
+      - ./.env.monolith:/app/.env.monolith
     depends_on:
       mongodb:
         condition: service_healthy

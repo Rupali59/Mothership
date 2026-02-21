@@ -30,7 +30,8 @@ services:
       - MONGODB_URI=mongodb://mongodb:27017
       - DATABASE_NAME=motherboard
     env_file:
-      - ./apps/core-server/.env.production
+      - path: ./apps/motherboard/backend/.env.production
+        required: false
     restart: always
     # Remove volume mount for production (use built image)
     volumes: []
@@ -38,15 +39,16 @@ services:
   # Core Platform - Frontend
   frontend:
     build:
-      context: ./apps/frontend
-      dockerfile: Dockerfile
+      context: ./apps/motherboard/frontend
+      dockerfile: ../../../docker/node.Dockerfile
       target: production
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=${BACKEND_URL:-https://api.yourdomain.com}
       - NEXTAUTH_URL=${FRONTEND_URL:-https://yourdomain.com}
     env_file:
-      - ./apps/frontend/.env.production
+      - path: ./apps/motherboard/frontend/.env.production
+        required: false
     restart: always
     volumes: []
 
@@ -55,7 +57,8 @@ services:
     environment:
       - LOG_LEVEL=info
     env_file:
-      - ./services/scheduler/.env.production
+      - path: ./services/scheduler/.env.production
+        required: false
     restart: always
     volumes: []
 
@@ -65,7 +68,8 @@ services:
       - APP_ENV=production
       - LOG_LEVEL=info
     env_file:
-      - ./services/billing/.env.production
+      - path: ./services/billing/.env.production
+        required: false
     restart: always
     volumes: []
 
@@ -74,7 +78,8 @@ services:
     environment:
       - LOG_LEVEL=info
     env_file:
-      - ./services/health/.env.production
+      - path: ./services/health/.env.production
+        required: false
     restart: always
     volumes: []
 
@@ -83,7 +88,8 @@ services:
     environment:
       - APP_ENV=production
     env_file:
-      - ./services/marketing/.env.production
+      - path: ./services/marketing/.env.production
+        required: false
     restart: always
     volumes: []
 
@@ -92,7 +98,8 @@ services:
     environment:
       - APP_ENV=production
     env_file:
-      - ./services/cloud-adapter/.env.production
+      - path: ./services/cloud-adapter/.env.production
+        required: false
     restart: always
     volumes: []
 
@@ -102,7 +109,8 @@ services:
       - APP_ENV=production
       - LOG_LEVEL=info
     env_file:
-      - ./services/notification/.env.production
+      - path: ./services/notification/.env.production
+        required: false
     restart: always
     volumes: []
 
@@ -111,7 +119,8 @@ services:
     environment:
       - APP_ENV=production
     env_file:
-      - ./plugins/email/.env.production
+      - path: ./plugins/email/.env.production
+        required: false
     restart: always
     volumes: []
 
@@ -120,7 +129,8 @@ services:
     environment:
       - APP_ENV=production
     env_file:
-      - ./plugins/sms/.env.production
+      - path: ./plugins/sms/.env.production
+        required: false
     restart: always
     volumes: []
 
@@ -129,7 +139,8 @@ services:
     environment:
       - APP_ENV=production
     env_file:
-      - ./plugins/whatsapp/.env.production
+      - path: ./plugins/whatsapp/.env.production
+        required: false
     restart: always
     volumes: []
 
@@ -138,21 +149,24 @@ services:
     environment:
       - APP_ENV=production
     env_file:
-      - ./plugins/telegram/.env.production
+      - path: ./plugins/telegram/.env.production
+        required: false
     restart: always
     volumes: []
 
   # Inventory Management
   inventory:
     env_file:
-      - ./services/inventory-management/.env.production
+      - path: ./services/inventory-management/.env.production
+        required: false
     restart: always
     volumes: []
 
   # Order Management
   orders:
     env_file:
-      - ./services/order-management/.env.production
+      - path: ./services/order-management/.env.production
+        required: false
     restart: always
     volumes: []
 

@@ -10,19 +10,7 @@ exports.generateHoroscope = async (req, res) => {
   try {
     const { birthDetails, sections } = req.body;
 
-    // Basic validation
-    if (
-      !birthDetails ||
-      !birthDetails.date ||
-      !birthDetails.time ||
-      !birthDetails.latitude ||
-      !birthDetails.longitude
-    ) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Invalid birth details" });
-    }
-
+    // birthDetails validated by astrologyValidationMiddleware
     const birthHash = cacheService.generateBirthHash(birthDetails);
 
     // Check Cache
@@ -39,9 +27,13 @@ exports.generateHoroscope = async (req, res) => {
       }
     }
 
-    // Process New Horoscope
+    // Process New Horoscope (credentials validated by middleware)
+    const { apiKey, apiUrl } = req.astrologyContext;
     logger.info(`Cache miss for ${birthHash}, fetching from Vedika...`);
-    const processedData = await vedikaProcessor.fetchHoroscope(birthDetails);
+    const processedData = await vedikaProcessor.fetchHoroscope(birthDetails, {
+      apiKey,
+      apiUrl,
+    });
 
     // Save to DB
     const newHoroscope = await Horoscope.create({

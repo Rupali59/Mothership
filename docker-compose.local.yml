@@ -29,9 +29,7 @@ services:
     environment:
       - APP_ENV=development
       - LOG_LEVEL=debug
-    volumes:
-      - ./apps/core-server:/app
-      - /app/vendor # Don't overwrite vendor inside container
+    # No volume mount — runs built binary; use make dev for hot reload outside Docker
 
   frontend:
     build:
@@ -44,7 +42,7 @@ services:
       - MOTHERBOARD_API_URL=http://backend:8080
       - NEXT_PUBLIC_MOTHERBOARD_API_URL=http://localhost:8080
     volumes:
-      - ./apps/frontend:/app
+      - ./apps/motherboard/frontend:/app
       - /app/node_modules
       - /app/.next
 
@@ -56,9 +54,7 @@ services:
     environment:
       - APP_ENV=development
       - LOG_LEVEL=debug
-    volumes:
-      - ./services/scheduler:/app
-      - ../:/app/monitored_root
+    # No volume mount — runs built binary
 
   # Microservices
   auth:
@@ -66,16 +62,14 @@ services:
       - "8088:8088"
     environment:
       - APP_ENV=development
-    volumes:
-      - ./services/auth:/app
+    # No volume mount — runs built binary
 
   entitlement:
     ports:
       - "8085:8085"
     environment:
       - APP_ENV=development
-    volumes:
-      - ./services/entitlement:/app
+    # No volume mount — runs built binary
 
   billing:
     ports:
@@ -83,30 +77,26 @@ services:
     environment:
       - APP_ENV=development
       - LOG_LEVEL=debug
-    volumes:
-      - ./services/billing:/app
+    # No volume mount — runs built binary
 
   health:
     ports:
       - "8091:8091"
-    volumes:
-      - ./services/health:/app
+    # No volume mount — runs built binary
 
   marketing:
     ports:
       - "8092:8092"
     environment:
       - APP_ENV=development
-    volumes:
-      - ./services/marketing:/app
+    # No volume mount — runs built binary
 
   cloud-adapter:
     ports:
       - "8093:8093"
     environment:
       - APP_ENV=development
-    volumes:
-      - ./services/cloud-adapter:/app
+    # No volume mount — runs built binary
 
   notification:
     ports:
@@ -114,8 +104,7 @@ services:
     environment:
       - APP_ENV=development
       - LOG_LEVEL=debug
-    volumes:
-      - ./services/notification:/app
+    # No volume mount — runs built binary
 
   storage:
     ports:
@@ -126,14 +115,12 @@ services:
   inventory:
     ports:
       - "8096:8096"
-    volumes:
-      - ./plugins/inventory:/app
+    # No volume mount — runs built binary
 
   orders:
     ports:
       - "8097:8097"
-    volumes:
-      - ./plugins/orders:/app
+    # No volume mount — runs built binary
 
   # Plugins
   email:
@@ -141,48 +128,42 @@ services:
       - "8081:8081"
     environment:
       - APP_ENV=development
-    volumes:
-      - ./plugins/email:/app
+    # No volume mount — runs built binary
 
   sms:
     ports:
       - "8082:8082"
     environment:
       - APP_ENV=development
-    volumes:
-      - ./plugins/sms:/app
+    # No volume mount — runs built binary
 
   whatsapp:
     ports:
       - "8083:8083"
     environment:
       - APP_ENV=development
-    volumes:
-      - ./plugins/whatsapp:/app
+    # No volume mount — runs built binary
 
   telegram:
     ports:
       - "8084:8084"
     environment:
       - APP_ENV=development
-    volumes:
-      - ./plugins/telegram:/app
+    # No volume mount — runs built binary
 
   razorpay:
     ports:
       - "8086:8086"
     environment:
       - APP_ENV=development
-    volumes:
-      - ./plugins/razorpay:/app
+    # No volume mount — runs built binary
 
   stripe:
     ports:
       - "8087:8087"
     environment:
       - APP_ENV=development
-    volumes:
-      - ./plugins/stripe:/app
+    # No volume mount — runs built binary
 
   jhora:
     ports:
@@ -199,6 +180,7 @@ services:
       - APP_ENV=development
     volumes:
       - ./plugins/vedika:/app
+      - /app/node_modules
 
 volumes:
   redis_data_local:

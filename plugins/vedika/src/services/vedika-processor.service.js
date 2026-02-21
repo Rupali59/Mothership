@@ -3,12 +3,21 @@ const logger = require("../utils/logger");
 
 class VedikaProcessorService {
   constructor() {
-    this.apiUrl =
+    this.defaultApiUrl =
       process.env.VEDIKA_API_URL || "https://api.vedika.io/v2/astrology";
-    this.apiKey = process.env.VEDIKA_API_KEY;
   }
 
-  async fetchHoroscope(birthDetails) {
+  /**
+   * @param {object} birthDetails - Validated birth details
+   * @param {{ apiKey: string, apiUrl?: string }} options - Validated credentials (required)
+   */
+  async fetchHoroscope(birthDetails, options = {}) {
+    const { apiKey, apiUrl = this.defaultApiUrl } = options;
+
+    if (!apiKey || typeof apiKey !== "string") {
+      throw new Error("Vedika API key is required");
+    }
+
     try {
       logger.info(
         `Calling Vedika API for ${birthDetails.date} ${birthDetails.time}`,
@@ -23,24 +32,24 @@ class VedikaProcessorService {
 
       const headers = {
         "Content-Type": "application/json",
-        "X-API-Key": this.apiKey,
+        "X-API-Key": apiKey,
       };
 
       // 1. Fetch Kundli (Base data, Yogas, Houses)
-      const kundliRes = await axios.post(`${this.apiUrl}/kundli`, requestBody, {
+      const kundliRes = await axios.post(`${apiUrl}/kundli`, requestBody, {
         headers,
       });
 
       // 2. Fetch Dashas
       const dashaRes = await axios.post(
-        `${this.apiUrl}/vimshottari-dasha`,
+        `${apiUrl}/vimshottari-dasha`,
         requestBody,
         { headers },
       );
 
       // 3. Fetch Doshas
       const doshaRes = await axios.post(
-        `${this.apiUrl}/all-doshas`,
+        `${apiUrl}/all-doshas`,
         requestBody,
         { headers },
       );

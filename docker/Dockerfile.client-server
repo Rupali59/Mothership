@@ -1,19 +1,39 @@
 # Shared Dockerfile for Client Servers (Node.js / Express)
-FROM node:18-alpine
+# Multi-stage build optimized for production
+
+FROM node:18-alpine AS dependencies
 
 WORKDIR /app
 
-# Copy package files
+# Copy only package files to leverage Docker cache layers
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Use npm ci for reproducible, locked dependency installation
+RUN npm ci --only=production
+
+
+FROM node:18-alpine AS runtime
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# Copy production dependencies from builder stage
+COPY --from=dependencies --chown=nodejs:nodejs /app/node_modules ./node_modules
 
 # Copy source code
-COPY . .
+COPY --chown=nodejs:nodejs . .
+
+# Switch to non-root user
+USER nodejs
 
 # Expose port (default 3001, but docker-compose overrides)
 EXPOSE 3001
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3001', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
 
 # Start command
 CMD ["npm", "start"]

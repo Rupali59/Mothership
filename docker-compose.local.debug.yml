@@ -1,0 +1,25 @@
+# Debug overrides for local development
+# Usage: ./deploy.sh local debug up
+# Attach from VS Code: "Attach to Backend (Docker)" and "Attach to Frontend (Docker)"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/go.Dockerfile.debug
+      args:
+        SERVICE_PATH: apps/motherboard/backend
+        MAIN_PATH: main.go
+    ports:
+      - "8080:8080"
+      - "2345:2345"
+    environment:
+      - APP_ENV=development
+      - LOG_LEVEL=debug
+
+  frontend:
+    environment:
+      - NODE_OPTIONS=--inspect=0.0.0.0:9230
+    ports:
+      - "3000:4020"
+      - "9230:9230"

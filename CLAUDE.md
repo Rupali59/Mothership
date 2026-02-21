@@ -8,8 +8,8 @@ Motherboard is a multi-tenant platform for workspace management, communication p
 
 ## Architecture
 
-- **apps/frontend/** — Next.js 15 + React 18 + TypeScript frontend (port 4020 dev)
-- **apps/core-server/** — Go + Gin backend API (port 4021 local, 8080 Docker)
+- **apps/motherboard/frontend/** — Next.js 15 + React 18 + TypeScript frontend (port 4020 dev)
+- **apps/motherboard/backend/** — Go + Gin backend API (port 4021 local, 8080 Docker)
 - **services/** — Independent Go microservices (auth, billing, notification, scheduler, health, entitlement, storage, task-tracker, marketing, cloud-adapter)
 - **plugins/** — Communication/payment plugins: email (8081), sms (8082), whatsapp (8083), telegram (8084), stripe, razorpay, inventory, orders
 - **go.work** — Go workspace file coordinating modules across core, plugins, and services
@@ -18,7 +18,7 @@ Multi-tenant isolation uses workspace slugs (X-Workspace-Slug header) with RBAC.
 
 ## Common Commands
 
-### Frontend (from `apps/frontend/`)
+### Frontend (from `apps/motherboard/frontend/`)
 
 ```bash
 npm run dev          # Dev server with Turbo on port 4020
@@ -31,7 +31,7 @@ npm run test:e2e     # Playwright E2E tests
 npm run format       # Prettier formatting
 ```
 
-### Backend (from `apps/core-server/`)
+### Backend (from `apps/motherboard/backend/`)
 
 ```bash
 make dev             # Hot-reload dev server (Air) on port 4021
@@ -61,7 +61,7 @@ Local dev requires: MongoDB 7.0 (:27017), Redis 7 (:6379), MinIO (:9000/:9001). 
 
 ## Key Environment Variables
 
-Backend `.env` in `apps/core-server/`: `CRM_MONGODB_URI`, `CRM_DB_NAME`, `API_KEY`, `JWT_SECRET`, `PORT`, `ENV`. Run `make check-env` to validate.
+Backend `.env` in `apps/motherboard/backend/`: `CRM_MONGODB_URI`, `CRM_DB_NAME`, `API_KEY`, `JWT_SECRET`, `PORT`, `ENV`. Run `make check-env` to validate.
 
 ## Testing
 

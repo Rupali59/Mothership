@@ -64,9 +64,9 @@ Thumbs.db
 **/tmp/
 
 # Environment files
-.env
-.env.local
-.env.*.local
+**/.env
+**/.env.*
+!**/.env.example
 
 # Logs
 *.log

@@ -1,7 +1,0 @@
-configs:
-  - key: "FEATURE_NEW_UI"
-    value: "true"
-    module: "frontend"
-    branch: "preview"
-    valueType: "bool"
-    description: "Enable new UI for preview builds"

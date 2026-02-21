@@ -3,18 +3,28 @@ const logger = require("../utils/logger");
 
 class JHoraProcessorService {
   constructor() {
-    this.apiUrl = process.env.JHORA_API_URL;
+    this.defaultApiUrl = process.env.JHORA_API_URL;
   }
 
-  async fetchHoroscope(birthDetails) {
+  /**
+   * @param {object} birthDetails - Validated birth details
+   * @param {{ apiUrl: string }} options - Validated API URL (required)
+   */
+  async fetchHoroscope(birthDetails, options = {}) {
+    const { apiUrl = this.defaultApiUrl } = options;
+
+    if (!apiUrl || typeof apiUrl !== "string") {
+      throw new Error("JHora API URL is required");
+    }
+
     try {
       logger.info(
-        `Calling JHora API at ${this.apiUrl} for ${birthDetails.date} ${birthDetails.time}`,
+        `Calling JHora API at ${apiUrl} for ${birthDetails.date} ${birthDetails.time}`,
       );
 
       // Call external JHora API
       const response = await axios.post(
-        `${this.apiUrl}/calculate`,
+        `${apiUrl}/calculate`,
         birthDetails,
         {
           headers: { "Content-Type": "application/json" },

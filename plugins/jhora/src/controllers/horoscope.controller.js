@@ -23,13 +23,7 @@ exports.generateHoroscope = async (req, res) => {
         .json({ success: false, error: "Workspace ID required" });
     }
 
-    // Basic validation
-    if (!birthDetails || !birthDetails.date || !birthDetails.time) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Invalid birth details" });
-    }
-
+    // birthDetails validated by astrologyValidationMiddleware
     const birthHash = cacheService.generateBirthHash(birthDetails);
 
     // Check Cache (L1: Redis) - Scoped by workspace
@@ -74,11 +68,12 @@ exports.generateHoroscope = async (req, res) => {
       }
     }
 
-    // Process New Horoscope (External API)
+    // Process New Horoscope (credentials validated by middleware)
+    const { apiUrl } = req.astrologyContext;
     logger.info(
       `Cache miss for ${birthHash} in workspace ${workspaceId}, fetching from JHora...`,
     );
-    const rawData = await jhoraProcessor.fetchHoroscope(birthDetails);
+    const rawData = await jhoraProcessor.fetchHoroscope(birthDetails, { apiUrl });
 
     // Ingest into Normalized Schema
     // This uses transactions to save to Planets, Charts, etc. atomicallly

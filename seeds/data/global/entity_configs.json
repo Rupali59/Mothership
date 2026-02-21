@@ -1,5 +1,5 @@
 {
-  "apps/core-server": {
+  "apps/motherboard/backend": {
     "local": {
       "PORT": "8080",
       "ENV": "local",
@@ -84,7 +84,7 @@
     }
   },
 
-  "apps/frontend": {
+  "apps/motherboard/frontend": {
     "local": {
       "PORT": "3000",
       "ENV": "local",
@@ -608,6 +608,18 @@
       "VEDIKA_API_URL": "https://api.vedika.io/v2/astrology",
       "VEDIKA_API_KEY": "",
       "CACHE_TTL": "604800",
+      "LOG_LEVEL": "info"
+    }
+  },
+  "services/infrastructure": {
+    "local": {
+      "PORT": "8099",
+      "ENV": "local",
+      "LOG_LEVEL": "info"
+    },
+    "development": {
+      "PORT": "8099",
+      "ENV": "development",
       "LOG_LEVEL": "info"
     }
   }

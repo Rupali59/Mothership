@@ -1,7 +1,8 @@
 // gen-ports-env generates a root-level .ports.env file from ports.json.
+// It is stored in .config/global/.ports.env.
 //
 // It reads ports.json (the single source of truth for port assignments) and
-// produces a .ports.env file containing:
+// produces a .config/global/.ports.env file containing:
 //   - <SERVICE>_PORT=<port> for every assignment
 //   - <SERVICE>_SERVICE_URL=http://<docker-service-name>:<port> for inter-service comms
 //
@@ -29,16 +30,17 @@ import (
 
 // PortsFile matches the structure of ports.json.
 type PortsFile struct {
-	Schema      string         `json:"$schema"`
-	Bands       map[string]any `json:"bands"`
-	Assignments map[string]int `json:"assignments"`
+	Schema           string         `json:"$schema"`
+	Bands            map[string]any `json:"bands"`
+	Assignments      map[string]int `json:"assignments"`
+	DebugAssignments map[string]int `json:"debug_assignments,omitempty"`
 }
 
 // serviceNameMap defines the Docker Compose service name for each path.
 // Paths not listed here derive the name from the last segment.
 var serviceNameMap = map[string]string{
-	"apps/core-server": "backend",
-	"apps/frontend":    "frontend",
+	"apps/motherboard/backend": "backend",
+	"apps/motherboard/frontend": "frontend",
 }
 
 // deriveEnvKey turns a path like "services/health" into "HEALTH".
@@ -48,9 +50,9 @@ func deriveEnvKey(path string) string {
 
 	// Special cases
 	switch path {
-	case "apps/core-server":
+	case "apps/motherboard/backend":
 		return "BACKEND"
-	case "apps/frontend":
+	case "apps/motherboard/frontend":
 		return "FRONTEND"
 	case "services/cloud-adapter":
 		return "CLOUD_ADAPTER"
@@ -73,7 +75,7 @@ func deriveDockerService(path string) string {
 
 func main() {
 	dryRun := flag.Bool("dry-run", false, "Print to stdout instead of writing file")
-	output := flag.String("output", ".ports.env", "Output file path")
+	output := flag.String("output", ".config/global/.ports.env", "Output file path")
 	flag.Parse()
 
 	// Find repo root by locating ports.json relative to working dir or binary.
@@ -114,7 +116,21 @@ func main() {
 		sb.WriteString(fmt.Sprintf("%s_PORT=%d\n", key, pf.Assignments[p]))
 	}
 
-	// Section 2: Service URLs (Docker-internal)
+	// Section 2: Debug port assignments (Delve for Go services)
+	if len(pf.DebugAssignments) > 0 {
+		debugPaths := make([]string, 0, len(pf.DebugAssignments))
+		for p := range pf.DebugAssignments {
+			debugPaths = append(debugPaths, p)
+		}
+		sort.Strings(debugPaths)
+		sb.WriteString("\n# ── Debug ports (Delve) ──────────────────────────────────────\n")
+		for _, p := range debugPaths {
+			key := deriveEnvKey(p)
+			sb.WriteString(fmt.Sprintf("DEBUG_%s_PORT=%d\n", key, pf.DebugAssignments[p]))
+		}
+	}
+
+	// Section 3: Service URLs (Docker-internal)
 	sb.WriteString("\n# ── Service URLs (Docker internal) ────────────────────────\n")
 	for _, p := range paths {
 		key := deriveEnvKey(p)
@@ -130,6 +146,10 @@ func main() {
 		return
 	}
 
+	if err := os.MkdirAll(filepath.Dir(*output), 0755); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: cannot create directory for %s: %v\n", *output, err)
+		os.Exit(1)
+	}
 	if err := os.WriteFile(*output, []byte(content), 0644); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: cannot write %s: %v\n", *output, err)
 		os.Exit(1)

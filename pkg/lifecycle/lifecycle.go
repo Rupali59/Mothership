@@ -59,7 +59,7 @@ func New(router *gin.Engine, port string, logger *zap.Logger) *Server {
 	router.GET("/healthz", s.livenessHandler)
 	router.GET("/readyz", s.readinessHandler)
 	router.GET("/startupz", s.startupHandler)
-	router.GET("/health", s.readinessHandler)
+	// Note: /health is handled by the application router in core-server to provide comprehensive status
 
 	return s
 }
