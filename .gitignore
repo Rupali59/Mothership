@@ -85,3 +85,5 @@ apps/core-frontend/
 env.d/
 
 *.md
+apps/motherboard/backend
+apps/motherboard/frontend
