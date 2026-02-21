@@ -1,37 +1,40 @@
 # Git
 .git
 .gitignore
+**/.git/
 
-# Node modules (will be installed during build)
-**/node_modules
+# Node / Frontend (exclude from Go build context)
+**/node_modules/
+**/.next/
+**/coverage/
+**/.nyc_output/
+**/dist/
 
-# Build outputs
-**/.next
-**/dist
-**/build
+# Binaries and build artifacts
+**/bin/
+**/obj/
+*.exe
+*.test
+*.prof
+**/out/
+**/build/
 
-# IDE
-.vscode
-.idea
-**/*.swp
+# Logs and temp
+*.log
+**/.logs/
+**/tmp/
+**/vendor/
 
-# OS
+# Environment files
+**/.env
+**/.env.*
+.ports.env
+
+# IDEs and editors
+.vscode/
+.idea/
 .DS_Store
-**/.DS_Store
+*.swp
 
-# Test/docs
-**/tests
-**/test
-**/*.test.*
-**/*.spec.*
-docs/
-
-# Docker compose files (not needed in build context)
-docker-compose*.yml
-
-# Env files at root (service-level .env files ARE needed)
-.env
-.env.*
-
-# Client directories (not needed for platform build)
-# These are handled by docker-compose.clients.dev.yml separately
+# Documentation (optional - reduces context size)
+# *.md

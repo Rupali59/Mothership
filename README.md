@@ -177,18 +177,23 @@ nano .env.production  # Update with your values
 **💰 Free Option**: Deploy on Oracle Cloud Free Tier for $0/month!
 See [ULTRA_BUDGET_DEPLOYMENT.md](./docs/ULTRA_BUDGET_DEPLOYMENT.md)
 
-### Alternative: Docker Compose (Classic)
+### Alternative: Docker Compose
 
 ```bash
-# Start all services without the script
-docker-compose up -d
+cd motherboard-infra
+cp .ports.env.example .ports.env   # if first run
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+docker compose -f docker-compose.yml up --build -d
 
 # View logs
-docker-compose logs -f
+docker compose -f docker-compose.yml logs -f
 
 # Stop all services
-docker-compose down
+docker compose -f docker-compose.yml down
 ```
+
+BuildKit (DOCKER_BUILDKIT=1) is required for cache mounts that speed up Go and npm builds. Docker Desktop enables it by default.
 
 ### Manual Setup
 

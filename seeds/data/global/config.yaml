@@ -1,6 +1,0 @@
-configs:
-  - key: "SENTRY_DSN"
-    value: "https://examplePublicKey@o0.ingest.sentry.io/0"
-    module: "monitoring"
-    environment: "production"
-    description: "Global Sentry DSN for error tracking"

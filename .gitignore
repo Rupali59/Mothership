@@ -1,25 +1,7 @@
-# Go workspace
-!go.work
-go.work.sum
-
 # Independent Service Repositories (Polyrepo)
-services/chaukidar/
-services/cloud-adapter/
-services/health/
-services/marketing/
-services/scheduler/
-services/storage/
-services/inventory-management/
-services/entitlement/
-apps/core-frontend/
-plugins/email/
-plugins/sms/
-plugins/telegram/
-plugins/whatsapp/
-plugins/inventory/
-plugins/orders/
-plugins/razorpay/
-plugins/stripe/
+services/**/.git/
+apps/**/.git/
+plugins/**/.git/
 
 # Binaries and compiled files
 server
@@ -30,60 +12,28 @@ gen-env
 *.exe
 *.test
 *.prof
+**/bin/
+**/obj/
 
-# Generated port configuration
-.ports.env
-
-# OS specific files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# IDEs and editors
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Dependencies
-**/node_modules/
+# Logs and Tmp
+*.log
+**/.logs/
+**/tmp/
 **/vendor/
-**/venv/
-**/.venv/
-
-# Build artifacts
-**/dist/
+**/node_modules/
 **/.next/
+**/dist/
 **/build/
 **/out/
-**/tmp/
 
 # Environment files
 **/.env
 **/.env.*
 !**/.env.example
+.ports.env
 
-# Logs
-*.log
-**/.logs/
-
-# Independent Service Repositories (Polyrepo)
-services/chaukidar/
-services/cloud-adapter/
-services/health/
-services/marketing/
-services/scheduler/
-services/storage/
-services/inventory-management/
-services/entitlement/
-apps/core-frontend/
-env.d/
-
-*.md
-apps/motherboard/backend
-apps/motherboard/frontend
+# IDEs and editors
+.vscode/
+.idea/
+.DS_Store
+*.swp

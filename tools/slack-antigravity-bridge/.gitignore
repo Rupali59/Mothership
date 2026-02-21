@@ -1,7 +1,0 @@
-node_modules/
-.env
-antigravity-queue/*.json
-!antigravity-queue/.gitkeep
-antigravity-queue/processed/
-*.log
-.DS_Store

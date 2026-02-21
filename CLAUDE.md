@@ -48,12 +48,19 @@ make deps            # go mod download && go mod tidy
 
 ### Docker (full platform)
 
+BuildKit is required for cache mounts (faster Go/npm dependency resolution). Docker Desktop enables it by default.
+
 ```bash
-docker compose -f docker-compose.dev.yml up                 # Platform services
-docker compose -f docker-compose.dev.yml -f docker-compose.clients.dev.yml up  # With clients
-./deploy.sh local up     # Scripted local deployment with health checks
-./deploy.sh local down   # Stop all services
+# Enable BuildKit (required for cache mounts; often already on by default)
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
+cd motherboard-infra
+cp .ports.env.example .ports.env   # if first run
+docker compose -f docker-compose.yml up --build
 ```
+
+Frontend: http://localhost:4020. Backend: http://localhost:8080. Build only specific services: `docker compose -f docker-compose.yml build backend frontend`.
 
 ## Infrastructure Dependencies
 

@@ -1,32 +1,51 @@
 go 1.25.5
 
 use (
-	.
-	./apps/motherboard/backend
-	./apps/motherboard/backend/internal/config
-	./infrastructure/queue
-	./libs/common
-	./libs/comms-sdk
-	./pkg/bootstrapping
-	./pkg/storage
-	./pkg/lifecycle
-	./plugins/email
-	./plugins/inventory
-	./plugins/orders
-	./plugins/razorpay
-	./plugins/sms
-	./plugins/stripe
-	./plugins/telegram
-	./plugins/whatsapp
-	./services/auth
-	./services/billing
-	./services/chaukidar
-	./services/cloud-adapter
-	./services/entitlement
-	./services/health
-	./services/inventory-management
-	./services/marketing
-	./services/notification
-	./services/scheduler
-	./services/storage
+	./motherboard-api
+	./motherboard-api/internal/config
+	./motherboard-commerce/services/billing
+	./motherboard-commerce/services/inventory-management
+	./motherboard-communications/services/marketing
+	./motherboard-communications/services/notification
+	./motherboard-coordination/services/chaukidar
+	./motherboard-coordination/services/config-manager
+	./motherboard-coordination/services/scheduler
+	./motherboard-core/services/auth
+	./motherboard-core/services/cloud-adapter
+	./motherboard-core/services/entitlement
+	./motherboard-core/services/health
+	./motherboard-core/services/storage
+	./motherboard-infra/infrastructure/queue
+	./motherboard-shared
+	./motherboard-shared/libs/common
+	./motherboard-shared/libs/comms-sdk
+	./motherboard-shared/pkg/bootstrapping
+	./motherboard-shared/pkg/config
+	./motherboard-shared/pkg/lifecycle
+	./motherboard-shared/pkg/storage
+)
+
+replace (
+	github.com/Rupali59/motherboard-api v0.0.0 => ./motherboard-api
+	github.com/Rupali59/motherboard-api/internal/config v0.0.0 => ./motherboard-api/internal/config
+	github.com/Rupali59/motherboard-commerce/services/billing v0.0.0 => ./motherboard-commerce/services/billing
+	github.com/Rupali59/motherboard-commerce/services/inventory-management v0.0.0 => ./motherboard-commerce/services/inventory-management
+	github.com/Rupali59/motherboard-communications/services/marketing v0.0.0 => ./motherboard-communications/services/marketing
+	github.com/Rupali59/motherboard-communications/services/notification v0.0.0 => ./motherboard-communications/services/notification
+	github.com/Rupali59/motherboard-coordination/services/chaukidar v0.0.0 => ./motherboard-coordination/services/chaukidar
+	github.com/Rupali59/motherboard-coordination/services/config-manager v0.0.0 => ./motherboard-coordination/services/config-manager
+	github.com/Rupali59/motherboard-coordination/services/scheduler v0.0.0 => ./motherboard-coordination/services/scheduler
+	github.com/Rupali59/motherboard-core/services/auth v0.0.0 => ./motherboard-core/services/auth
+	github.com/Rupali59/motherboard-core/services/cloud-adapter v0.0.0 => ./motherboard-core/services/cloud-adapter
+	github.com/Rupali59/motherboard-core/services/entitlement v0.0.0 => ./motherboard-core/services/entitlement
+	github.com/Rupali59/motherboard-core/services/health v0.0.0 => ./motherboard-core/services/health
+	github.com/Rupali59/motherboard-core/services/storage v0.0.0 => ./motherboard-core/services/storage
+	github.com/Rupali59/motherboard-infra/infrastructure/queue v0.0.0 => ./motherboard-infra/infrastructure/queue
+	github.com/Rupali59/motherboard-shared v0.0.0 => ./motherboard-shared
+	github.com/Rupali59/motherboard-shared/libs/common v0.0.0 => ./motherboard-shared/libs/common
+	github.com/Rupali59/motherboard-shared/libs/comms-sdk v0.0.0 => ./motherboard-shared/libs/comms-sdk
+	github.com/Rupali59/motherboard-shared/pkg/bootstrapping v0.0.0 => ./motherboard-shared/pkg/bootstrapping
+	github.com/Rupali59/motherboard-shared/pkg/config v0.0.0 => ./motherboard-shared/pkg/config
+	github.com/Rupali59/motherboard-shared/pkg/lifecycle v0.0.0 => ./motherboard-shared/pkg/lifecycle
+	github.com/Rupali59/motherboard-shared/pkg/storage v0.0.0 => ./motherboard-shared/pkg/storage
 )

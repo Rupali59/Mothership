@@ -1,7 +1,0 @@
-{
-  "name": "@motherboard/astrology-validation",
-  "version": "1.0.0",
-  "description": "Shared validation logic for astrology plugins (Vedika, Jhora)",
-  "main": "index.js",
-  "private": true
-}
