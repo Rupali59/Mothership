@@ -61,13 +61,27 @@ This document captures the implementation details for Phase 2 and Phase 3 of the
 
 **Auth service:** `services/auth/internal/handlers/authorization.go` — `CheckPermission` and `GetUserCapabilities` accept both `tenantId` and `workspaceId` (backend AuthClient sends `tenantId`)
 
-### 3.3 Dual-Worker Auth Model
+### 3.3 Casbin RBAC (Auth Service)
+
+The auth service will use **Casbin** for RBAC policy evaluation (same pattern as entitlement service).
+
+| Step | File | Change |
+|------|------|--------|
+| 1 | `motherboard-core/services/auth/go.mod` | Add `github.com/casbin/casbin/v2`, `github.com/casbin/mongodb-adapter/v3` |
+| 2 | `motherboard-core/services/auth/internal/policy/rbac_model.conf` | Create model (sub, dom, obj, act — mirror entitlement) |
+| 3 | `motherboard-core/services/auth/internal/policy/loader.go` | Load policies from `roles` + `user_role_assignments` |
+| 4 | `motherboard-core/services/auth/internal/policy/enforcer.go` | `CheckPermission(userID, workspaceID, resource, action, scopeID)` |
+| 5 | `motherboard-core/services/auth/internal/handlers/authorization.go` | Wire to Casbin policy layer |
+
+**Policy mapping:** `sub`=userId, `dom`=workspaceId (or workspaceId:scopeID for client-scoped), `obj`=resource, `act`=action.
+
+### 3.5 Dual-Worker Auth Model
 
 | Step | File | Change |
 |------|------|--------|
 | 1 | `services/auth/docs/AUTH_VALIDATION.md` | Document User Worker (session/OAuth/user-api-token; RBAC) vs Service/Asset Worker (plugin JWT; no RBAC) validation paths |
 
-### 3.4 Backend RBAC Cleanup
+### 3.6 Backend RBAC Cleanup
 
 - **Verified:** No `apps/motherboard/backend/internal/rbac` directory
 - **Verified:** `apps/motherboard/backend/internal/middleware/rbac.go` uses AuthClient only; no local PolicyEngine

@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD033 MD036 MD051 -->
+
 # Motherboard Platform
 
 > A comprehensive multi-service platform for workspace management, communication plugins, and business automation
@@ -6,7 +8,7 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-14+-black)](https://nextjs.org/)
 [![Go](https://img.shields.io/badge/Go-1.21+-00ADD8)](https://go.dev/)
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB)](https://python.org/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)](https://docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 </div>
@@ -15,7 +17,7 @@
 
 - [Overview](#overview)
 - [Architecture](#architecture)
-- [Repository Index](#repository-index)
+- [Workspace Index](#workspace-index)
 - [Quick Start](#quick-start)
 - [Development](#development)
 - [Documentation](#documentation)
@@ -23,230 +25,162 @@
 
 ## 🎯 Overview
 
-Motherboard is a modular platform ecosystem consisting of core services, microservices, communication plugins, and development tools. The platform provides multi-tenant workspace management, authentication, billing, health monitoring, and seamless integration with external communication providers.
+Motherboard is a modular platform ecosystem consisting of core services, microservices, communication plugins, and frontend applications. The platform provides multi-tenant workspace management, authentication, billing, health monitoring, and seamless integration with external communication providers.
 
 ### Key Features
 
 - 🏢 **Multi-tenant Architecture** - Isolated workspaces with RBAC
-- 🔐 **OAuth2 Authentication** - Secure authentication with NextAuth.js
-- 💳 **Multi-provider Billing** - Stripe, PayPal, and Razorpay integration
-- 🔌 **Extensible Plugin System** - Email, SMS, and WhatsApp plugins
+- 🔐 **OAuth2 Authentication** - Secure authentication within `motherboard-core`
+- 💳 **Commerce Hub** - Billing, inventory, and order management
+- 🔌 **Extensible Communication** - Unified Notification Service with Email, SMS, WhatsApp, and Telegram integrations
 - 📊 **Health Monitoring** - Comprehensive service health tracking
-- 🔄 **Background Jobs** - Automated syncing with GitHub and Jira
-- ☁️ **Cloud Agnostic** - Deploy anywhere with cloud adapter
+- 🔄 **Event Coordination** - Automated syncing with GitHub/Jira via Scheduler and Chaukidar
+- ☁️ **Cloud Agnostic** - Build and deploy anywhere with shared Docker infrastructure
 
 ## 🏗️ Architecture
 
 ```mermaid
 graph TB
-    subgraph "Core Platform"
-        FE[MotherBoard<br/>Next.js Frontend<br/>:3000]
-        BE[Motherboard-server<br/>Go Backend API<br/>:8080]
+    subgraph "Web Layer"
+        FE[Motherboard Web<br/>Next.js Frontend<br/>:3000]
+        API[Motherboard API<br/>Go Gateway<br/>:8080]
     end
-    
-    subgraph "Microservices"
-        SCHED[Scheduler<br/>Background Jobs]
-        BILL[Billing Service<br/>:8090]
+
+    subgraph "Core Services"
+        AUTH[Auth Service]
         HEALTH[Health Service]
-        MARKET[Marketing Service]
-        CLOUD[Cloud Adapter]
+        ENT[Entitlement Service]
     end
-    
-    subgraph "Communication Plugins"
-        EMAIL[Email Plugin<br/>:8081]
-        SMS[SMS Plugin<br/>:8082]
-        WA[WhatsApp Plugin<br/>:8083]
+
+    subgraph "Coordination & Background"
+        SCHED[Scheduler]
+        CHAUK[Chaukidar]
+        TASK[Task Tracker]
     end
-    
-    subgraph "External Services"
-        DB[(MongoDB)]
-        GITHUB[GitHub API]
-        JIRA[Jira API]
-        PROVIDERS[Payment Providers]
+
+    subgraph "Commerce Layer"
+        BILL[Billing Service]
+        INV[Inventory Service]
+        ORDER[Orders Service]
     end
-    
-    FE -->|API Calls| BE
-    BE -->|Proxy| EMAIL
-    BE -->|Proxy| SMS
-    BE -->|Proxy| WA
-    BE -->|Database| DB
-    SCHED -->|Sync| GITHUB
-    SCHED -->|Sync| JIRA
-    BILL -->|Process| PROVIDERS
-    HEALTH -->|Monitor| BE
-    HEALTH -->|Monitor| SCHED
+
+    subgraph "Communications"
+        NOTIF[Notification Service]
+        EMAIL[Email Plugin]
+        SMS[SMS Plugin]
+        WA[WhatsApp Plugin]
+    end
+
+    FE -->|API Calls| API
+    API -->|Auth| AUTH
+    API -->|Check| HEALTH
+    API -->|Billing| BILL
+    API -->|Dispatch| NOTIF
+    NOTIF -->|Route| EMAIL
+    NOTIF -->|Route| SMS
+    NOTIF -->|Route| WA
+    SCHED -->|Watch| CHAUK
 ```
 
-## 📚 Repository Index
+## 📚 Workspace Index
 
-### 🎯 Core Platform
+The repository is organized into a modular Go workspace (`go.work`), combining frontend and backend infrastructure:
 
-| Repository | Description | Tech Stack | Port |
-|------------|-------------|------------|------|
-| [**MotherBoard**](./MotherBoard) | Main frontend application with Next.js 14+, React, and Tailwind CSS | Next.js, React, TypeScript | 3000 |
-| [**Motherboard-server**](./Motherboard-server) | Core backend API with authentication, plugin proxy, and business logic | Go, Gin, MongoDB | 8080 |
+### 🎯 Web & API Layer
 
-### ⚙️ Microservices
+| Module                                   | Description                      | Port |
+| ---------------------------------------- | -------------------------------- | ---- |
+| [**motherboard-web**](./motherboard-web) | Next.js 14+ frontend application | 3000 |
+| [**motherboard-api**](./motherboard-api) | Go-based API Gateway             | 8080 |
 
-| Repository | Description | Tech Stack | Port |
-|------------|-------------|------------|------|
-| [**Motherboard-scheduler**](./Motherboard-scheduler) | Background job processor for GitHub/Jira sync and webhooks | Go | - |
-| [**Motherboard-billing-service**](./Motherboard-billing-service) | Payment processing with Stripe, PayPal, and Razorpay | Go, MongoDB | 8090 |
-| [**Motherboard-health-service**](./Motherboard-health-service) | Health monitoring and metrics aggregation | Go | - |
-| [**Motherboard-marketing-service**](./Motherboard-marketing-service) | Marketing automation and campaign management | Go | - |
-| [**Motherboard-cloud-adapter**](./Motherboard-cloud-adapter) | Cloud provider abstraction layer | Go | - |
-| [**Motherboard-notification-service**](./services/notification-service) | Stateful notification tracker (The Action Engine) with event-driven dispatch and channel polymorphism | Go, MongoDB | 8094 |
+### ⚙️ Core & Coordination
 
-### 🔌 Communication Plugins
+| Module                                                     | Description                                                         | Port    |
+| ---------------------------------------------------------- | ------------------------------------------------------------------- | ------- |
+| [**motherboard-core**](./motherboard-core)                 | Essential microservices: `auth`, `health`, `entitlement`, `metrics` | Various |
+| [**motherboard-coordination**](./motherboard-coordination) | Event orchestration: `scheduler`, `task-tracker`, `chaukidar`       | Various |
 
-| Repository | Description | Tech Stack | Port |
-|------------|-------------|------------|------|
-| [**Email-Plugin**](./plugins/email) | Email delivery via Resend API | Go, Resend | 8081 |
-| [**SMS-Plugin**](./plugins/sms) | Multi-provider SMS (Twilio, Exotel) | Go | 8082 |
-| [**WhatsApp-Plugin**](./plugins/telephony/whatsapp) | WhatsApp messaging integration | Go | 8083 |
-| [**Telegram-Plugin**](./plugins/telephony/telegram) | Telegram Bot API with inline keyboards | Go | 8084 |
+### 🏪 Commerce & Communications
 
-### 🛠️ Development Tools
+| Module                                                         | Description                                                              | Port    |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------ | ------- |
+| [**motherboard-commerce**](./motherboard-commerce)             | Business logic: `billing`, `inventory`, `orders`                         | Various |
+| [**motherboard-communications**](./motherboard-communications) | Delivery plugins: `email`, `sms`, `whatsapp`, `telegram`, `notification` | Various |
 
-| Repository | Description | Tech Stack |
-|------------|-------------|------------|
-| [**Jira_tracker**](./Jira_tracker) | Jira tracking and monitoring utility | Python |
+### 🏗️ Shared & Infrastructure
+
+| Module                                         | Description                                                                                 |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| [**motherboard-shared**](./motherboard-shared) | Core packages, models, middleware, and database adapters shared across all Go microservices |
+| [**motherboard-infra**](./motherboard-infra)   | Dockerfiles, Docker Compose files, environment configurations, and deployment scripts       |
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- **Docker** & **Docker Compose** (recommended)
+- **Docker** & **Docker Compose** (Highly Recommended)
 - **Node.js** 18+ (for manual frontend development)
 - **Go** 1.21+ (for manual backend development)
-- **MongoDB** 7.0+ (included in Docker setup)
 
-### Local Development (Recommended)
+### Local Docker Development (Recommended)
 
-Use the deployment script for easy setup:
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd Motherboard
-
-# Start all services with one command
-./deploy.sh local up
-
-# Or run in background
-./deploy.sh local up -d
-
-# View logs
-./deploy.sh local logs
-
-# Stop all services
-./deploy.sh local down
-```
-
-Services will be available at:
-
-- Frontend: <http://localhost:3000>
-- Backend API: <http://localhost:8080>
-- Billing Service: <http://localhost:8090>
-- Notification Service: <http://localhost:8094>
-- Email Plugin: <http://localhost:8081>
-- SMS Plugin: <http://localhost:8082>
-- WhatsApp Plugin: <http://localhost:8083>
-- Telegram Plugin: <http://localhost:8084>
-
-### Production Deployment
-
-Deploy to a single instance (VPS/Cloud):
-
-```bash
-# On your production server
-git clone <repository-url>
-cd Motherboard
-
-# Configure environment
-cp .env.production.example .env.production
-nano .env.production  # Update with your values
-
-# Deploy
-./deploy.sh production up -d
-
-# Check status
-./deploy.sh production status
-```
-
-**💰 Free Option**: Deploy on Oracle Cloud Free Tier for $0/month!
-See [ULTRA_BUDGET_DEPLOYMENT.md](./docs/ULTRA_BUDGET_DEPLOYMENT.md)
-
-### Alternative: Docker Compose
+The easiest way to orchestrate the entire platform is via Docker Compose from the infrastructure directory:
 
 ```bash
 cd motherboard-infra
-cp .ports.env.example .ports.env   # if first run
-export DOCKER_BUILDKIT=1
-export COMPOSE_DOCKER_CLI_BUILD=1
-docker compose -f docker-compose.yml up --build -d
+
+# Generate necessary port registries (if not present)
+make sync-ports
+
+# Start all services (Backend, Auth, Health, Redis, MongoDB)
+docker compose up -d backend auth health
 
 # View logs
-docker compose -f docker-compose.yml logs -f
+docker compose logs -f
 
-# Stop all services
-docker compose -f docker-compose.yml down
+# Shut down the ecosystem
+docker compose down
 ```
 
-BuildKit (DOCKER_BUILDKIT=1) is required for cache mounts that speed up Go and npm builds. Docker Desktop enables it by default.
+### Manual Development Setup
 
-### Manual Setup
-
-For individual service development, refer to each repository's README:
-
-1. **Frontend**: See [MotherBoard/README.md](./MotherBoard/README.md)
-2. **Backend**: See [Motherboard-server/README.md](./Motherboard-server/README.md)
-3. **Plugins**: See individual plugin READMEs
-
-## 💻 Development
-
-### Environment Configuration
-
-Each service requires its own `.env` file. See DEVELOPMENT.md for detailed environment setup.
-
-### Running Services Individually
+If you need to run specific components locally outside Docker:
 
 ```bash
 # Frontend
-cd MotherBoard
+cd motherboard-web
 npm install
 npm run dev
 
-# Backend
-cd Motherboard-server
-go mod download
+# API Gateway
+cd motherboard-api
 go run main.go
 
-# Scheduler
-cd Motherboard-scheduler
-go run main.go
-
-# Email Plugin
-cd plugins/email
-go run main.go
+# Specific Microservice (e.g., Auth)
+cd motherboard-core/services/auth
+go run cmd/server/main.go
 ```
+
+## 💻 Development Guidelines
+
+### Go Workspace
+
+This repository utilizes a unified `go.work` configuration. You do not need to publish packages from `motherboard-shared/` to test them; changes are immediately reflected in dependent microservices within the workspace. Be cautious when running `go mod tidy` – ensure it's executed within the context of the respective module, or run `go work sync`.
+
+### Environment Configuration
+
+Ports and shared environment variables are tracked centrally within `motherboard-infra/.ports.env` and managed via registry injection. Ensure local `.env` files within modules (e.g., `motherboard-web/.env.local`) match the expected infrastructure values.
 
 ### Testing
 
 ```bash
-# Frontend tests
-cd MotherBoard
+# Frontend
+cd motherboard-web
 npm test
 
-# Backend tests
-cd Motherboard-server
+# Backend Workspace All Tests
 go test ./...
-
-# Integration tests
-docker-compose -f docker-compose.test.yml up
 ```
-
-## 📖 Documentation
 
 ## 📖 Documentation
 
@@ -255,60 +189,20 @@ Comprehensive documentation is available in the `docs/` directory:
 - **[Developer Guide](./docs/DEVELOPER_GUIDE.md)** - **START HERE**: Architecture, Best Practices, and Build Process.
 - **[Architecture](./docs/MOTHERBOARD_ARCHITECTURE.md)** - High-level system architecture and vision.
 - **[API Reference](./docs/API_REFERENCE.md)** - API definitions and contracts.
-- **[Capabilities & Plans](./docs/CAPABILITIES_AND_PLANS.md)** - Current capabilities and future roadmap.
-- **[Gap Analysis](./docs/GAP_ANALYSIS.md)** - Implementation gaps and verified features.
-- **[Integration Overview](./docs/INTEGRATION_OVERVIEW.md)** - How to integrate new services.
-- **[Frontend Compatibility](./docs/MOTHERBOARD_FRONTEND_COMPATIBILITY.md)** - Frontend integration details.
-
-### Component Documentation
-
-- [Backend Documentation](./core/motherboard-server/docs/)
-- [Plugin Architecture](./docs/MOTHERBOARD_ARCHITECTURE.md#plugin-architecture)
+- **[Integration Overview](./docs/INTEGRATION_OVERVIEW.md)** - How to integrate new services within the modular layout.
 
 ## 🤝 Contributing
 
 We welcome contributions! Please see our contributing guidelines:
 
-1. Fork the relevant repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. Create a feature branch (`git checkout -b feature/amazing-feature`)
+2. Commit your changes (`git commit -m 'Add amazing feature'`)
+3. Push to the branch (`git push origin feature/amazing-feature`)
+4. Open a Pull Request
 
-### Development Guidelines
+## License
 
-- Follow the existing code style and conventions
-- Write tests for new features
-- Update documentation as needed
-- Ensure all tests pass before submitting PR
-
-## 📊 Service Status
-
-| Service | Status | Last Updated |
-|---------|--------|--------------|
-| MotherBoard | ✅ Active | 2026-01-18 |
-| Motherboard-server | ✅ Active | 2026-01-18 |
-| Motherboard-scheduler | ✅ Active | 2026-01-17 |
-| Motherboard-billing-service | ✅ Active | 2026-01-16 |
-| Email-Plugin | ✅ Active | 2026-01-16 |
-| SMS-Plugin | ✅ Active | 2026-01-16 |
-| WhatsApp-Plugin | ✅ Active | 2026-01-16 |
-| Telegram-Plugin | ⚠️ In Development | 2026-01-18 |
-| Health Service | ⚠️ In Development | - |
-| Marketing Service | ⚠️ In Development | - |
-| Cloud Adapter | ⚠️ In Development | - |
-| Notification Service | ⚠️ In Development | 2026-01-18 |
-
-## 📄 License
-
-This project is licensed under the MIT License - see individual repositories for details.
-
-## 🔗 Related Resources
-
-- [GitHub Issues](https://github.com/issues)
-- [Project Roadmap](#)
-- [API Documentation](#)
-- [Deployment Guide](./DEVELOPMENT.md#deployment)
+This project is licensed under the MIT License.
 
 ---
 
