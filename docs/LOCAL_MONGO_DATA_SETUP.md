@@ -33,6 +33,8 @@ This document outlines what MongoDB data and auth configuration each service nee
 | `jobs` | Scheduler | Background job records |
 | `health_checks` | Health | Per-service health check history |
 | `services` | Health | Service registry (name, type, expected interval) |
+| `health_assets` | Backend | Health dashboard items (infra, plugins, services) linked to motherboard workspace |
+| `health_component_mappings` | Backend | Maps health_checks.Components keys to service names (e.g. database→mongodb) |
 | `assets` | Storage | File references |
 | `casbin_rule` | Entitlement (Casbin) | RBAC policy rules (if Casbin uses motherboard DB) |
 

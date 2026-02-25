@@ -70,13 +70,38 @@ logs: ## Tail logs for a service (make logs SERVICE=backend)
 
 # ─── Seed ─────────────────────────────────────────────────────────────────────
 .PHONY: seed
-seed: seed-platform seed-services seed-oauth seed-config ## Run all seed scripts in order
+seed: seed-platform seed-services seed-oauth seed-health-assets seed-health-component-mappings seed-config ## Run all seed scripts in order
 	@echo "✅ All seeds complete."
+
+.PHONY: seed-health-assets
+seed-health-assets: ## Seed health assets for motherboard workspace (infra, plugins, services)
+	@echo "Seeding health assets..."
+	@if docker exec motherboard-mongodb mongosh --quiet motherboard --eval 'db.runCommand({ping:1})' >/dev/null 2>&1; then \
+		docker exec -i motherboard-mongodb mongosh --quiet motherboard < $(SCRIPTS_DIR)/seed_health_assets.js; \
+	else \
+		mongosh "$${MONGODB_URI:-mongodb://localhost:27017}/motherboard" $(SCRIPTS_DIR)/seed_health_assets.js || \
+		(echo ""; echo "❌ MongoDB not reachable. Ensure motherboard-mongodb is running."; exit 1); \
+	fi
+
+.PHONY: seed-health-component-mappings
+seed-health-component-mappings: ## Seed health component mappings (health_checks key -> service name)
+	@echo "Seeding health component mappings..."
+	@if docker exec motherboard-mongodb mongosh --quiet motherboard --eval 'db.runCommand({ping:1})' >/dev/null 2>&1; then \
+		docker exec -i motherboard-mongodb mongosh --quiet motherboard < $(SCRIPTS_DIR)/seed_health_component_mappings.js; \
+	else \
+		mongosh "$${MONGODB_URI:-mongodb://localhost:27017}/motherboard" $(SCRIPTS_DIR)/seed_health_component_mappings.js || \
+		(echo ""; echo "❌ MongoDB not reachable. Ensure motherboard-mongodb is running."; exit 1); \
+	fi
 
 .PHONY: seed-platform
 seed-platform: ## Seed workspace, admin user, roles, plugins (init_platform.js)
 	@echo "Seeding platform (workspace + admin user + roles)..."
-	mongosh mongodb://localhost:27017 $(SCRIPTS_DIR)/init_platform.js
+	@if docker exec motherboard-mongodb mongosh --quiet --eval 'db.runCommand({ping:1})' >/dev/null 2>&1; then \
+		docker exec -i motherboard-mongodb mongosh < $(SCRIPTS_DIR)/init_platform.js; \
+	else \
+		mongosh mongodb://localhost:27017 $(SCRIPTS_DIR)/init_platform.js || \
+		(echo ""; echo "❌ MongoDB not reachable. Ensure motherboard-mongodb is running."; exit 1); \
+	fi
 
 .PHONY: seed-roles
 seed-roles: ## Seed superuser role + assignments (seed_roles.js)
@@ -97,6 +122,16 @@ seed-oauth: ## Seed OAuth clients + enable all entitlements (seed_oauth_clients.
 seed-config: ## Seed config-manager with env values (requires MongoDB)
 	@echo "Seeding config-manager..."
 	mongosh mongodb://localhost:27017 $(SCRIPTS_DIR)/seed_config.js
+
+.PHONY: sync-registry
+sync-registry: ## Sync registration data from data/inventory/ to MongoDB
+	@echo "Syncing registration data from folder to MongoDB..."
+	@cd motherboard-infra && go run cmd/registration-sync/main.go
+
+.PHONY: run-static-registry
+run-static-registry: ## Run the static registry service (for preview environments)
+	@echo "Starting static registry service on port 8111..."
+	@cd motherboard-infra && go run cmd/static-registry-service/main.go
 
 .PHONY: gen-envs
 gen-envs: ## Generate .env.generated files per service from config-manager
@@ -171,7 +206,7 @@ health: ## Check health of all platform services
 		name=$${svc%%:*}; \
 		endpoint=$${svc#*:}; \
 		status=$$(curl -sf "http://localhost:$$endpoint" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('status','?'))" 2>/dev/null || echo "unreachable"); \
-		if [ "$$status" = "ok" ]; then printf "  ✅ %-20s %s\n" "$$name" "ok"; \
+		if [ "$$status" = "ok" ] || [ "$$status" = "ready" ]; then printf "  ✅ %-20s %s\n" "$$name" "$$status"; \
 		else printf "  ❌ %-20s %s\n" "$$name" "$$status"; fi; \
 	done
 

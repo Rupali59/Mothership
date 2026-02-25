@@ -189,6 +189,8 @@ Or use frontend at http://localhost:4020, phone `+918349780523`, workspace `tath
 | `motherboard-infra/scripts/init_platform.js` | Full platform wipe+seed (admin@motherboard.dev) | `motherboard` | `make seed-platform` |
 | `motherboard-infra/scripts/seed_roles.js` | Superuser role + assignments | `motherboard` | `make seed-roles` |
 | `motherboard-infra/scripts/seed_satellite_services.go` | Register microservices in registry | `motherboard` | `make seed-services` |
+| `motherboard-infra/scripts/seed_health_assets.js` | Health assets for motherboard (infra, plugins, services) | `motherboard` | `make seed-health-assets` |
+| `motherboard-infra/scripts/seed_health_component_mappings.js` | Maps health_checks component keys to service names | `motherboard` | `make seed-health-component-mappings` |
 | `motherboard-infra/scripts/seed_oauth_clients.js` | Register motherboard-web OAuth client + all entitlements | `motherboard` | `make seed-oauth` |
 | `motherboard-infra/scripts/push_client_envs.sh` | Push client env vars to config-manager + Chaukidar | — | `make push-envs` |
 

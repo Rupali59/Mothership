@@ -5,17 +5,26 @@ use (
 	./motherboard-api/internal/config
 	./motherboard-commerce/services/billing
 	./motherboard-commerce/services/inventory-management
+	./motherboard-commerce/services/razorpay
+	./motherboard-commerce/services/stripe
+	./motherboard-communications/services/email
 	./motherboard-communications/services/marketing
 	./motherboard-communications/services/notification
+	./motherboard-communications/services/sms
+	./motherboard-communications/services/telegram
+	./motherboard-communications/services/whatsapp
 	./motherboard-coordination/services/chaukidar
 	./motherboard-coordination/services/config-manager
 	./motherboard-coordination/services/scheduler
 	./motherboard-core/services/auth
 	./motherboard-core/services/cloud-adapter
+	./motherboard-core/services/docker
 	./motherboard-core/services/entitlement
 	./motherboard-core/services/health
 	./motherboard-core/services/storage
 	./motherboard-infra/infrastructure/queue
+	./motherboard-infra/cmd/registration-sync
+	./motherboard-infra/cmd/static-registry-service
 	./motherboard-shared
 	./motherboard-shared/libs/common
 	./motherboard-shared/libs/comms-sdk
@@ -30,8 +39,14 @@ replace (
 	github.com/Rupali59/motherboard-api/internal/config v0.0.0 => ./motherboard-api/internal/config
 	github.com/Rupali59/motherboard-commerce/services/billing v0.0.0 => ./motherboard-commerce/services/billing
 	github.com/Rupali59/motherboard-commerce/services/inventory-management v0.0.0 => ./motherboard-commerce/services/inventory-management
+	github.com/Rupali59/motherboard-commerce/services/razorpay v0.0.0 => ./motherboard-commerce/services/razorpay
+	github.com/Rupali59/motherboard-commerce/services/stripe v0.0.0 => ./motherboard-commerce/services/stripe
+	github.com/Rupali59/motherboard-communications/services/email v0.0.0 => ./motherboard-communications/services/email
 	github.com/Rupali59/motherboard-communications/services/marketing v0.0.0 => ./motherboard-communications/services/marketing
 	github.com/Rupali59/motherboard-communications/services/notification v0.0.0 => ./motherboard-communications/services/notification
+	github.com/Rupali59/motherboard-communications/services/sms v0.0.0 => ./motherboard-communications/services/sms
+	github.com/Rupali59/motherboard-communications/services/telegram v0.0.0 => ./motherboard-communications/services/telegram
+	github.com/Rupali59/motherboard-communications/services/whatsapp v0.0.0 => ./motherboard-communications/services/whatsapp
 	github.com/Rupali59/motherboard-coordination/services/chaukidar v0.0.0 => ./motherboard-coordination/services/chaukidar
 	github.com/Rupali59/motherboard-coordination/services/config-manager v0.0.0 => ./motherboard-coordination/services/config-manager
 	github.com/Rupali59/motherboard-coordination/services/scheduler v0.0.0 => ./motherboard-coordination/services/scheduler
